@@ -11,105 +11,54 @@ import numpy as np
 class Decoder(nn.Module):
     def __init__(
         self,
-        latent_signal,
-        layer_sizes=[],
-        b_norm=True,
-        non_linearity=F.relu,
+        input_size,
+        hidden_size,
+        output_size,
+        bnorm=True,
+        bnorm_final=False,
         regularizer=None,
         weight_decay=0.001,
-        reuse=False,
-        scope=None,
         dropout_prob=None,
-        b_norm_finish=False,
-        verbose=False,
     ):
         super(Decoder, self).__init__()
-        self.latent_signal = latent_signal
-        self.layer_sizes = layer_sizes
-        self.b_norm = b_norm
-        self.non_linearity = non_linearity
-        self.regularization = regularizer
-        self.weight_decay = weight_decay
-        self.b_norm_finish = b_norm_finish
-        self.verbose = verbose
-        self.layers = []
-
-        if self.verbose:
-            print("Building decoder...")
-
-        n_layers = len(layer_sizes)
-
-        # replicate the drop_out prob for all layers -> instead of tf_utils.replicate_parameter_for_all_layers
-        if dropout_prob is not None:
-            dropout_prob = [dropout_prob] * n_layers
+        self.bnorm = bnorm
+        self.bnorm_final = bnorm_final
         self.dropout_prob = dropout_prob
 
-        if n_layers < 2: # if only one layer choose a simpler architecture
-            raise ValueError("For an FC decoder with single a layer use simpler code.")
-        
-        # create the layers
-        self.layers = nn.ModuleList()
-        for i in range(n_layers - 1):
-            name =  f"decoder_fc_{i}"
-            
-            if i == 0:
-                layer = latent_signal # first layer is the latent signal
-            else:
-                layer = nn.Linear(layer_sizes[i-1], layer_sizes[i]) # create a linear layer
-            
-            self.layers.append(layer)
+        if self.bnorm:
+            self.bn1 = nn.BatchNorm1d(hidden_size)
+            self.bn2 = nn.BatchNorm1d(hidden_size)
 
-            if self.verbose: 
-                print(name, f"FC params = {np.prod(layer.weight.shape) + np.prod(layer.bias.shape)}")
-            
-            if b_norm: 
-                name += "_bnorm"
-                layer = nn.BatchNorm1d(layer_sizes[i])
-                self.layers.append(layer)
-            
-                if self.verbose:
-                    print(f"bnorm params = {np.prod(layer.weight.shape) + np.prod(layer.bias.shape)}")
+        self.fc1 = nn.Linear(input_size, hidden_size)
+        self.fc2 = nn.Linear(hidden_size, hidden_size)
+        self.fc3 = nn.Linear(hidden_size, output_size)
 
-            if dropout_prob is not None:
-                layer = nn.Dropout(dropout_prob[i])
-                self.layers.append(layer)
-            
-            if non_linearity is not None:
-                layer = non_linearity(layer)
-                self.layers.append(layer)
+        if self.bnorm_final:
+            self.bn3 = nn.BatchNorm1d(output_size)
 
-            if self.verbose:
-                print(f"Decoder layer {i} output size: {np.prod(layer.shape)[1:]}")
+        if dropout_prob is not None:
+            self.dropout = nn.Dropout(dropout_prob)
 
-        # final layer is a linear layer
+        self.relu = F.relu
 
-        name = f"decoder_fc_{n_layers-1}"
-        layer = nn.Linear(layer_sizes[-2], layer_sizes[-1])
-        self.layers.append(layer)
-
-        if self.verbose:
-            print(name, f"FC params = {np.prod(layer.weight.shape) + np.prod(layer.bias.shape)}")
-
-        if self.b_norm_finish:
-            name += "_bnorm"
-            layer = nn.BatchNorm1d(layer_sizes[-1])
-            self.layers.append(layer)
-
-            if self.verbose:
-                print(f"bnorm params = {np.prod(layer.weight.shape) + np.prod(layer.bias.shape)}")
-            
-        if self.verbose:
-            print("Decoder output size: ", np.prod(layer.shape)[1:])
-    
     def forward(self, x):
-        for layer in self.layers:
-            x = layer(x)
+        x = self.fc1(x)
+        if self.bnorm:
+            x = self.bn1(x)
+
+        if self.dropout_prob is not None:
+            x = self.dropout(x)
+        x = self.relu(x)
+
+        x = self.fc2(x)
+        if self.bnorm:
+            x = self.bn2(x)
+        if self.dropout_prob is not None:
+            x = self.dropout(x)
+        x = self.relu(x)
+
+        x = self.fc3(x)
+        if self.bnorm_final:
+            x = self.bn3(x)
 
         return x
-
-
-
-
-            
-        
-            
