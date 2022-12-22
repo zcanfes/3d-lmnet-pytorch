@@ -2,8 +2,8 @@ from pathlib import Path
 
 import torch
 
-from term_project.model.model_2d import 2DEncoder
-from term_project.model.model_pointcloud import 3DEncoder
+from term_project.model.model_2d import TwoDeeEncoder
+from term_project.model.model_pointcloud import ThreeDeeEncoder
 
 from term_project.data.shapenet import ShapeNet
 
@@ -74,9 +74,11 @@ def train(model2d,model_pointcloud, train_dataloader, valid_dataloader, device, 
             optimizer.zero_grad()
             
             
-            mu,std =model2d(batch["img"][0])
+            mu,log_var =model2d(batch["img"][12])
             #  IMLEMENT SAMPLING !!!!!!!
-            predicted_latent_from_2d= ...
+            std=torch.sqrt(torch.exp(log_var))
+            predicted_latent_from_2d= mu+torch.randn(std.size())*std
+            
             latent_from_pointcloud=model_pointcloud(batch["point"])
             loss = loss_criterion(predicted_latent_from_2d, latent_from_pointcloud)
             
@@ -108,10 +110,11 @@ def train(model2d,model_pointcloud, train_dataloader, valid_dataloader, device, 
 
                     with torch.no_grad():
                         # TODO: Get prediction scores
-                        mu,std = model2d(batch_val['img'][0])
+                        mu,log_var = model2d(batch_val['img'][12])
                         
                         # IMPLEMENT SAMPLING !!!!!!
-                        prediction=...
+                        std=torch.sqrt(torch.exp(log_var))
+                        prediction= mu+torch.randn(std.size())*std
                     
                     loss_total_val += loss(prediction, model_pointcloud(batch_val['point'])).item()
                 
@@ -136,6 +139,7 @@ def main(config):
                    'learning_rate_model': learning rate of the encoder 
                    'max_epochs': total number of epochs after which training should stop
                    'print_every_n': print train loss every n iterations
+                   'ThreeDeeEncoderPath': path to the learned weights of ThreeDeeEncoder model
                    'visualize_every_n': visualize some training shapes every n iterations
                    'final_layer: if it is "variational" then mu and std are predicted or else a latent vector is predicted
                    'is_overfit': if the training is done on a small subset of data specified in term_project/split/overfit.txt,
@@ -165,13 +169,15 @@ def main(config):
 
 
     # Instantiate model
-    model2d=2DEncoder(config["final_layer"],config["bottleneck"])
-    model_pointcloud=3DEncoder()
+    model2d=TwoDeeEncoder(config["final_layer"],config["bottleneck"])
+    
+    # upload learned weights !!!!!!!!!
+    model_pointcloud=ThreeDeeEncoder.load_state_dict(torch.load(config["ThreeDeeEncoderPath"], map_location='cpu'))
     
     
     # Load model if resuming from checkpoint
     if config['resume_ckpt'] is not None:
-        model.load_state_dict(torch.load(config['resume_ckpt'] + "_model.ckpt", map_location='cpu'))
+        model2d.load_state_dict(torch.load(config['resume_ckpt'] + "_model.ckpt", map_location='cpu'))
         
     # Move model to specified device
     model2d.to(device)
