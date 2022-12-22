@@ -2,7 +2,9 @@ from pathlib import Path
 
 import torch
 
-from term_project.model.model_2d import 2DToPointCloud
+from term_project.model.model_2d import 2DEncoder
+from term_project.model.model_pointcloud import 3DEncoder
+
 from term_project.data.shapenet import ShapeNet
 
 #from exercise_3.util.misc import evaluate_model_on_grid
@@ -10,7 +12,7 @@ from term_project.data.shapenet import ShapeNet
 from google.colab import files
 import os 
 
-def train(model, train_dataloader, valid_dataloader, device, config):
+def train(model2d,model_pointcloud, train_dataloader, valid_dataloader, device, config):
     
     loss=None
     if config["loss_criterion"]=="variational":
@@ -22,18 +24,18 @@ def train(model, train_dataloader, valid_dataloader, device, config):
         
         optimizer = torch.optim.Adam([
         {
-            "params":model.base.parameters(),
-            "lr":config["learning_rate_model_base"],
+            "params":model2d.base.parameters(),
+            "lr":config["learning_rate_model"],
             weight_decay=1e-5
         },
         {
-            "params":model.mu.parameters(),
-            "lr":config["learning_rate_mode_mu"],
+            "params":model2d.mu.parameters(),
+            "lr":config["learning_rate_model"],
             weight_decay=1e-3
         },
         {
-            "params":model.std.parameters(),
-            "lr":config["learning_rate_mode_std"],
+            "params":model2d.std.parameters(),
+            "lr":config["learning_rate_model"],
             weight_decay=1e-3
         }
     ])
@@ -45,16 +47,19 @@ def train(model, train_dataloader, valid_dataloader, device, config):
             
         optimizer = torch.optim.Adam([
         {
-            "params":model.base.parameters(),
-            "lr":config["learning_rate_model_base"],
+            "params":model2d.base.parameters(),
+            "lr":config["learning_rate_model"],
             weight_decay=1e-5
         },
         {
-            "params":model.latent.parameters(),
-            "lr":config["learning_rate_mode_latent"],
+            "params":model2d.latent.parameters(),
+            "lr":config["learning_rate_model"],
             weight_decay=1e-3
         }])
-        
+    loss.to(device)  
+    model2d.train()
+    model_pointcloud.eval()
+    
     train_loss_running = 0.
 
     # best training loss for saving the model
@@ -62,15 +67,19 @@ def train(model, train_dataloader, valid_dataloader, device, config):
 
     for epoch in range(config['max_epochs']):
 
-        for batch_idx, batch in enumerate(train_dataloader):
+        for i, batch in enumerate(train_dataloader):
             # Move batch to device
             ShapeNet.move_batch_to_device(batch, device)
 
             optimizer.zero_grad()
             
             
-            predicted_sdf =model(torch.cat([batch_latent_vectors,points],dim=1))
-            loss = loss_criterion(predicted_sdf, sdf)
+            mu,std =model2d(batch["img"][0])
+            #  IMLEMENT SAMPLING !!!!!!!
+            predicted_latent_from_2d= ...
+            latent_from_pointcloud=model_pointcloud(batch["point"])
+            loss = loss_criterion(predicted_latent_from_2d, latent_from_pointcloud)
+            
             # TODO: backward
             loss.backward()
             
@@ -79,47 +88,57 @@ def train(model, train_dataloader, valid_dataloader, device, config):
             
             # loss logging
             train_loss_running += loss.item()
-            iteration = epoch * len(train_dataloader) + batch_idx
+            iteration = epoch * len(train_dataloader) + i
 
             if iteration % config['print_every_n'] == (config['print_every_n'] - 1):
-                train_loss = train_loss_running / config["print_every_n"]
-                print(f'[{epoch:03d}/{batch_idx:05d}] train_loss: {train_loss:.6f}')
-
-                # save best train model and latent codes
-                if train_loss < best_loss:
-                    torch.save(model.state_dict(), f'exercise_3/runs/{config["experiment_name"]}/model_best.ckpt')
-                    torch.save(latent_vectors.state_dict(), f'exercise_3/runs/{config["experiment_name"]}/latent_best.ckpt')
-                    best_loss = train_loss
-
+                print(f'[{epoch:03d}/{i:05d}] train_loss: {train_loss_running / config["print_every_n"]:.3f}')
                 train_loss_running = 0.
-                
-            if iteration % config['visualize_every_n'] == (config['visualize_every_n'] - 1):
-                # Set model to eval
-                model.eval()
-                latent_vectors_for_vis = latent_vectors(torch.LongTensor(range(min(5, latent_vectors.num_embeddings))).to(device))
-                for latent_idx in range(latent_vectors_for_vis.shape[0]):
-                    # create mesh and save to disk
-                    evaluate_model_on_grid(model, latent_vectors_for_vis[latent_idx, :], device, 64, f'exercise_3/runs/{config["experiment_name"]}/meshes/{iteration:05d}_{latent_idx:03d}.obj')
-                # set model back to train
-                model.train()
 
+            # validation evaluation and logging
+            if iteration % config['validate_every_n'] == (config['validate_every_n'] - 1):
+
+                # set model to eval, important if your network has e.g. dropout or batchnorm layers
+                model2d.eval()
+
+                loss_total_val = 0
+                total, correct = 0, 0
+                # forward pass and evaluation for entire validation set
+                for batch_val in valid_dataloader:
+                    ShapeNetVox.move_batch_to_device(batch_val, device)
+
+                    with torch.no_grad():
+                        # TODO: Get prediction scores
+                        mu,std = model2d(batch_val['img'][0])
+                        
+                        # IMPLEMENT SAMPLING !!!!!!
+                        prediction=...
+                    
+                    loss_total_val += loss(prediction, model_pointcloud(batch_val['point'])).item()
+                
+                print(f'[{epoch:03d}/{i:05d}] val_loss: {loss_total_val / len(valloader):.3f})
+
+                if accuracy > best_accuracy:
+                    torch.save(model.state_dict(), f'term_project/runs/{config["experiment_name"]}/model_best.ckpt')
+                    best_accuracy = accuracy
+
+                # set model back to train
+                model2d.train()
 def main(config):
     """
     Function for training DeepSDF
     :param config: configuration for training - has the following keys
-                   'experiment_name': name of the experiment, checkpoint will be saved to folder "exercise_2/runs/<experiment_name>"
+                   'experiment_name': name of the experiment, checkpoint will be saved to folder "term_project/runs/<experiment_name>"
                    'device': device on which model is trained, e.g. 'cpu' or 'cuda:0'
                    'num_sample_points': number of sdf samples per shape while training
-                   'latent_code_length': length of deepsdf latent vector
+                   'bottleneck': length of the final latent vector
                    'batch_size': batch size for training and validation dataloaders
                    'resume_ckpt': None if training from scratch, otherwise path to checkpoint (saved weights)
-                   'learning_rate_model': learning rate of model optimizer
-                   'learning_rate_code': learning rate of latent code optimizer
-                   'lambda_code_regularization': latent code regularization loss coefficient
+                   'learning_rate_model': learning rate of the encoder 
                    'max_epochs': total number of epochs after which training should stop
                    'print_every_n': print train loss every n iterations
                    'visualize_every_n': visualize some training shapes every n iterations
-                   'is_overfit': if the training is done on a small subset of data specified in exercise_2/split/overfit.txt,
+                   'final_layer: if it is "variational" then mu and std are predicted or else a latent vector is predicted
+                   'is_overfit': if the training is done on a small subset of data specified in term_project/split/overfit.txt,
                                  train and validation done on the same set, so error close to 0 means a good overfit. Useful for debugging.
     """
 
@@ -132,30 +151,34 @@ def main(config):
         print('Using CPU')
 
     # create dataloaders
-    train_dataset = ShapeNet(config['num_sample_points'], 'train' if not config['is_overfit'] else 'overfit')
+    train_dataset = ShapeNet('train')
     train_dataloader = torch.utils.data.DataLoader(
-        train_dataset,   # Datasets return data one sample at a time; Dataloaders use them and aggregate samples into batches
-        batch_size=config['batch_size'],   # The size of batches is defined here
+        train_dataset,   
+        batch_size=config['batch_size'],   
         shuffle=True,    # Shuffling the order of samples is useful during training to prevent that the network learns to depend on the order of the input data
-        num_workers=0,   # Data is usually loaded in parallel by num_workers
+        num_workers=2,
         pin_memory=True  # This is an implementation detail to speed up data uploading to the GPU
     )
 
+    valset = ShapeNet('valid')
+    valloader = torch.utils.data.DataLoader(valset, batch_size=config['batch_size'], shuffle=False, num_workers=2)
+
+
     # Instantiate model
-    encoder=2DEncoder(config["final_layer"],config["bottleneck"])
-    decoder=2DDecoder()
+    model2d=2DEncoder(config["final_layer"],config["bottleneck"])
+    model_pointcloud=3DEncoder()
     
-    model = 2DToPointCloud(encoder,decoder)
     
     # Load model if resuming from checkpoint
     if config['resume_ckpt'] is not None:
         model.load_state_dict(torch.load(config['resume_ckpt'] + "_model.ckpt", map_location='cpu'))
         
     # Move model to specified device
-    model.to(device)
+    model2d.to(device)
+    model_pointcloud.to(device)
     # Create folder for saving checkpoints
     Path(f'term_project/runs/{config["experiment_name"]}').mkdir(exist_ok=True, parents=True)
 
     # Start training
-    train(model, latent_vectors, train_dataloader, device, config)
+    train(model2d, model_pointcloud, train_dataloader, valid_dataloader, device, config)
             
