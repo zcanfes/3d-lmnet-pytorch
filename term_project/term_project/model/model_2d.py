@@ -53,17 +53,3 @@ class TwoDeeEncoder(nn.Module):
         else:
             return self.mu(x),self.std(x)
         
-
-        
-class TwoDeeToPointCloud(nn.Module):
-
-    def __init__(self, encoder, decoder):
-        super().__init__()
-        self.encoder = encoder
-        self.decoder = decoder
-        
-    def forward(self, x):
-        
-        enc_result=self.encoder(x)
-        result=self.decoder(enc_result)
-        return result
