@@ -3,19 +3,19 @@ from pathlib import Path
 
 import torch
 
-from term_project.data.shapenet import ShapeNet
-from term_project.model.model_2d import TwoDeeEncoder
-from term_project.model.model_3d import ThreeDeeDecoder
-from term_project.util.visualization import visualize_pointcloud
+from data.shapenet import ShapeNet
+from model.model_2d import ImageEncoder
+from model.model_3d import PointCloudDecoder
+from utils.visualization import visualize_pointcloud
 
 
 class Inference2DToPointcloudVariational:
     def __init__(self, inp, encoder_path, decoder_path, config, device):
-        encoder = TwoDeeEncoder(config["final_layer"], config["bottleneck"])
+        encoder = ImageEncoder(config["final_layer"], config["bottleneck"])
         self.encoder = encoder.load_state_dict(
             torch.load(encoder_path, map_location="cpu")
         )
-        decoder = ThreeDeeDecoder(
+        decoder = PointCloudDecoder(
             config["input_size"],
             config["hidden_size"],
             config["output_size"],
@@ -37,9 +37,9 @@ class Inference2DToPointcloudVariational:
 
     def infer(self):
 
-        # CHAMFER LOSS SHOULD BE DEFINED !!!!!!!!!!!
+        # TODO: CHAMFER LOSS SHOULD BE DEFINED !!!!!!!!!!!
         loss = ...
-        loss.to(device)
+        loss.to(self.device)
 
         mu, log_var = self.encoder(self.input["img"][12])
         std = torch.sqrt(torch.exp(log_var))
@@ -60,11 +60,11 @@ class Inference2DToPointcloudVariational:
 
 class Inference2DToPointcloudNormal:
     def __init__(self, inp, encoder_path, decoder_path, config, device):
-        encoder = TwoDeeEncoder(config["final_layer"], config["bottleneck"])
+        encoder = ImageEncoder(config["final_layer"], config["bottleneck"])
         self.encoder = encoder.load_state_dict(
             torch.load(encoder_path, map_location="cpu")
         )
-        decoder = ThreeDeeDecoder(
+        decoder = PointCloudDecoder(
             config["input_size"],
             config["hidden_size"],
             config["output_size"],
@@ -86,9 +86,9 @@ class Inference2DToPointcloudNormal:
 
     def infer(self):
 
-        # CHAMFER LOSS SHOULD BE DEFINED !!!!!!!!!!!
+        # TODO: CHAMFER LOSS SHOULD BE DEFINED !!!!!!!!!!!
         loss = ...
-        loss.to(device)
+        loss.to(self.device)
 
         pred_pointcloud = self.decoder(self.encoder(self.input["img"][12]))
         print("Groundtruth:")

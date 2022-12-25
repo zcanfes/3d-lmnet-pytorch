@@ -8,8 +8,6 @@ from code.model import PointCloudEncoder, PointCloudDecoder
 
 from utils import DiversityLoss
 
-
-
 from data.shapenet import ShapeNet
 
 # from exercise_3.util.misc import evaluate_model_on_grid
@@ -24,7 +22,7 @@ def train(
     loss = None
     if config["loss_criterion"] == "variational":
 
-        # loss_diversity TANIMLA !!!!!!!
+        # TODO: DiversityLoss TANIMLA !!!!!!!
 
         loss_latent_matching = nn.MSELoss()
         loss = loss_latent_matching + DiversityLoss
@@ -215,4 +213,11 @@ def main(config):
     )
 
     # Start training
-    train(model_image, model_pointcloud, train_dataloader, valid_dataloader, device, config)
+    train(
+        model_image,
+        model_pointcloud,
+        train_dataloader,
+        valid_dataloader,
+        device,
+        config,
+    )
