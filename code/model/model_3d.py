@@ -8,7 +8,7 @@ import numpy as np
 """
 
 
-class ThreeDeeDecoder(nn.Module):
+class PointCloudDecoder(nn.Module):
     def __init__(
         self,
         input_size,
@@ -20,7 +20,7 @@ class ThreeDeeDecoder(nn.Module):
         weight_decay=0.001,
         dropout_prob=None,
     ):
-        super(Decoder, self).__init__()
+        super().__init__()
         self.bnorm = bnorm
         self.bnorm_final = bnorm_final
         self.dropout_prob = dropout_prob
