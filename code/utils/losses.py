@@ -1,0 +1,2 @@
+class DiversityLoss():
+    pass
