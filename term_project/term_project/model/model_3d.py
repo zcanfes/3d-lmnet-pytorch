@@ -2,15 +2,11 @@ import torch.nn as nn
 import torch
 import torch.nn.functional as F
 import numpy as np
+
 """
     A decoding network which maps points from the latent space back onto the data space.
 """
-class ThreeDeeEncoder(nn.Module):
-    def __init__(self,):
-        pass
-    def forward(self,):
-        pass
-            
+
 
 class ThreeDeeDecoder(nn.Module):
     def __init__(
