@@ -1,3 +1,3 @@
-class DiversityLoss():
-    
+class DiversityLoss:
+
     pass
