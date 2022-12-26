@@ -11,4 +11,3 @@ pillow>=7.2.0
 tqdm>=4.48.2
 scipy>=1.4.1
 numpy>=1.19.4
-pre-commit
