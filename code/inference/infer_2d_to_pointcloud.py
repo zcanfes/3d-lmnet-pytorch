@@ -9,7 +9,7 @@ from model.model_3d import PointCloudDecoder
 from utils.visualization import visualize_pointcloud
 
 
-class Inference2DToPointcloudVariational:
+class Inference2DToPointCloudVariational:
     def __init__(self, inp, encoder_path, decoder_path, config, device):
         encoder = ImageEncoder(config["final_layer"], config["bottleneck"])
         self.encoder = encoder.load_state_dict(
@@ -58,7 +58,7 @@ class Inference2DToPointcloudVariational:
             visualize_pointcloud(pred_pointcloud[i])
 
 
-class Inference2DToPointcloudNormal:
+class Inference2DToPointCloudNormal:
     def __init__(self, inp, encoder_path, decoder_path, config, device):
         encoder = ImageEncoder(config["final_layer"], config["bottleneck"])
         self.encoder = encoder.load_state_dict(
