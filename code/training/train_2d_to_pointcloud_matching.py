@@ -15,7 +15,9 @@ from data.shapenet import ShapeNet
 import os
 
 
-def train(model_image, model_pointcloud, train_dataloader, valid_dataloader, device, config):
+def train(
+    model_image, model_pointcloud, train_dataloader, valid_dataloader, device, config
+):
 
     loss = None
     if config["loss_criterion"] == "variational":
