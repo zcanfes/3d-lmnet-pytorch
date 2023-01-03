@@ -1,6 +1,6 @@
 import random
 from pathlib import Path
-
+import numpy as np
 import torch
 
 from data.shapenet import ShapeNet
@@ -53,6 +53,14 @@ class Inference2DToPointCloudVariational:
         print("Groundtruth pointcloud:")
         visualize_pointcloud(self.input["point"])
         
+        p="/content/term_project/generated_variatioal_pointclouds_from2d_image/"+str(self.pointcloud_filename)+"/"
+        isExist = os.path.exists(p)
+        if not isExist:
+
+           os.makedirs(p)
+        
+        
+            
         for i in range(len(pred_pointcloud)):
             loss_value.append(loss(pred_pointcloud[i], self.input["point"]).item())
 
@@ -60,7 +68,10 @@ class Inference2DToPointCloudVariational:
 
             print("Prediction:")
             visualize_pointcloud(pred_pointcloud[i])
-
+            
+            with open(p+str(self.pointcloud_filename)+'.npy', 'wb') as f:
+                np.save(f,pred_pointcloud)
+                self.pointcloud_filename+=1
 
 class Inference2DToPointCloudNormal:
     def __init__(self, inp, encoder_path, decoder_path, config, device):
@@ -87,7 +98,8 @@ class Inference2DToPointCloudNormal:
         self.encoder.eval()
         self.encoder.to(self.device)
         self.decoder.to(self.device)
-
+        self.pointcloud_filename=0
+        
     def infer(self):
 
         # TODO: CHAMFER LOSS SHOULD BE DEFINED !!!!!!!!!!!
@@ -104,5 +116,16 @@ class Inference2DToPointCloudNormal:
 
         print("Chamfer loss value for prediction:", loss_value)
 
-        print("Prediction:")
+        print("Prediction pointcloud:")
         visualize_pointcloud(pred_pointcloud)
+        
+        p="/content/term_project/generated_pointcloud_from2d_image/"+str(self.pointcloud_filename)+"/"
+        isExist = os.path.exists(p)
+        if not isExist:
+
+           os.makedirs(p)
+        
+        with open(p+str(self.pointcloud_filename)+'.npy', 'wb') as f:
+            np.save(f,pred_pointcloud)
+            self.pointcloud_filename+=1
+            
