@@ -6,7 +6,7 @@ import torch
 from data.shapenet import ShapeNet
 from model.model_2d import ImageEncoder
 from model.model_3d import PointCloudDecoder
-from utils.visualization import visualize_pointcloud
+from utils.visualization import visualize_pointcloud, visualize_image
 
 
 class Inference2DToPointCloudVariational:
@@ -47,8 +47,12 @@ class Inference2DToPointCloudVariational:
         pred_pointcloud = self.decoder(pred_latent)
 
         loss_value = []
-        print("Groundtruth:")
+        print("Groundtruth 2D image:")
+        visualize_image(self.input["img"])
+        
+        print("Groundtruth pointcloud:")
         visualize_pointcloud(self.input["point"])
+        
         for i in range(len(pred_pointcloud)):
             loss_value.append(loss(pred_pointcloud[i], self.input["point"]).item())
 
@@ -91,7 +95,10 @@ class Inference2DToPointCloudNormal:
         loss.to(self.device)
 
         pred_pointcloud = self.decoder(self.encoder(self.input["img"][12]))
-        print("Groundtruth:")
+        print("Groundtruth 2D image:")
+        visualize_image(self.input["img"])
+        
+        print("Groundtruth pointcloud:")
         visualize_pointcloud(self.input["point"])
         loss_value = loss(pred_pointcloud, self.input["point"]).item()
 
