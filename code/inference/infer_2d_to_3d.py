@@ -125,7 +125,7 @@ class Inference2DToPointCloudNormal:
         visualize_pointcloud(pred_pointcloud)
 
         p = (
-            "/content/term_project/generated_pointcloud_from2d_image/"
+            "./generated_pointcloud_from2d_image/"
             + str(self.pointcloud_filename)
             + "/"
         )
