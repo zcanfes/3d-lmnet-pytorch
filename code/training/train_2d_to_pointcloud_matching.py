@@ -6,11 +6,9 @@ import torch.nn as nn
 from code.model import ImageEncoder
 from code.model import PointCloudEncoder, PointCloudDecoder
 
-from utils import DiversityLoss
+from utils import DiversityLoss, SquaredEuclideanError, LeastAbsoluteError, ChamferLoss
 
 from data.shapenet import ShapeNet
-
-# from exercise_3.util.misc import evaluate_model_on_grid
 
 import os
 
@@ -24,8 +22,14 @@ def train(
 
         # TODO: DiversityLoss TANIMLA !!!!!!!
 
-        loss_latent_matching = nn.MSELoss()
-        loss = loss_latent_matching + DiversityLoss
+        DiversityLoss = DiversityLoss(config["alpha"], config["penalty_angle"])
+
+        # TODO: loss toplama boyle oluyor mu??
+
+        loss_latent_matching = SquaredEuclideanError()
+
+        # TODO: Config Lambda tanimla!!!
+        loss_function = loss_latent_matching + config["lambda"] * DiversityLoss
 
         optimizer = torch.optim.Adam(
             [
@@ -48,9 +52,9 @@ def train(
         )
     else:
         if config["loss_criterion"] == "L1":
-            loss = nn.L1Loss()
+            loss_function = LeastAbsoluteError()
         else:
-            loss = nn.MSELoss()
+            loss_function = SquaredEuclideanError()
 
         optimizer = torch.optim.Adam(
             [
@@ -89,7 +93,7 @@ def train(
             predicted_latent_from_2d = mu + torch.randn(std.size()) * std
 
             latent_from_pointcloud = model_pointcloud(batch["point"])
-            loss = loss_criterion(predicted_latent_from_2d, latent_from_pointcloud)
+            loss = loss_function(predicted_latent_from_2d, latent_from_pointcloud)
 
             loss.backward()
 
@@ -131,14 +135,16 @@ def train(
                     ).item()
 
                 print(
-                    f"[{epoch:03d}/{i:05d}] val_loss: {loss_total_val / len(valloader):.3f}"
+                    f"[{epoch:03d}/{i:05d}] val_loss: {loss_total_val / len(valid_dataloader):.3f}"
                 )
 
                 # TODO: calculate accuracy
 
+                accuracy = ...
+
                 if accuracy > best_accuracy:
                     torch.save(
-                        model.state_dict(),
+                        model_image.state_dict(),
                         f'term_project/runs/{config["experiment_name"]}/model_best.ckpt',
                     )
                     best_accuracy = accuracy
@@ -149,7 +155,6 @@ def train(
 
 def main(config):
     """
-    Function for training DeepSDF
     :param config: configuration for training - has the following keys
                    'experiment_name': name of the experiment, checkpoint will be saved to folder "term_project/runs/<experiment_name>"
                    'device': device on which model is trained, e.g. 'cpu' or 'cuda:0'
@@ -185,9 +190,9 @@ def main(config):
         pin_memory=True,  # This is an implementation detail to speed up data uploading to the GPU
     )
 
-    valset = ShapeNet("valid")
-    valloader = torch.utils.data.DataLoader(
-        valset, batch_size=config["batch_size"], shuffle=False, num_workers=2
+    valid_dataset = ShapeNet("valid")
+    valid_dataloader = torch.utils.data.DataLoader(
+        valid_dataset, batch_size=config["batch_size"], shuffle=False, num_workers=2
     )
 
     # Instantiate model
@@ -195,7 +200,7 @@ def main(config):
 
     # upload learned weights !!!!!!!!!
     model_pointcloud = PointCloudEncoder.load_state_dict(
-        torch.load(config["ThreeDeeEncoderPath"], map_location="cpu")
+        torch.load(config["3d_encoder_path"], map_location="cpu")
     )
 
     # Load model if resuming from checkpoint
