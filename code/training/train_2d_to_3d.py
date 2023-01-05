@@ -188,9 +188,9 @@ def main(config):
         pin_memory=True,  # This is an implementation detail to speed up data uploading to the GPU
     )
 
-    valid_dataset = ShapeNet("valid")
+    val_dataset = ShapeNet("valid")
     valid_dataloader = torch.utils.data.DataLoader(
-        valid_dataset, batch_size=config["batch_size"], shuffle=False, num_workers=2
+        val_dataset, batch_size=config["batch_size"], shuffle=False, num_workers=2
     )
 
     # Instantiate model
