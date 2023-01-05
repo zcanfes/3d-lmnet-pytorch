@@ -6,30 +6,28 @@ import torch.nn as nn
 from code.model import ImageEncoder
 from code.model import PointCloudEncoder, PointCloudDecoder
 
-from utils import DiversityLoss, SquaredEuclideanError, LeastAbsoluteError, ChamferLoss
+from utils.losses import DiversityLoss, SquaredEuclideanError, LeastAbsoluteError
 
 from data.shapenet import ShapeNet
-
-import os
 
 
 def train(
     model_image, model_pointcloud, train_dataloader, valid_dataloader, device, config
 ):
 
-    loss = None
+    loss_function = None
     if config["loss_criterion"] == "variational":
 
         # TODO: DiversityLoss TANIMLA !!!!!!!
 
-        DiversityLoss = DiversityLoss(config["alpha"], config["penalty_angle"])
+        loss_div = DiversityLoss(config["alpha"], config["penalty_angle"])
 
         # TODO: loss toplama boyle oluyor mu??
 
         loss_latent_matching = SquaredEuclideanError()
 
         # TODO: Config Lambda tanimla!!!
-        loss_function = loss_latent_matching + config["lambda"] * DiversityLoss
+        loss_function = loss_latent_matching + config["lambda"] * loss_div
 
         optimizer = torch.optim.Adam(
             [

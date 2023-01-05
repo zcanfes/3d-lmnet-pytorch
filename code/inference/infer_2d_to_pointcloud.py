@@ -2,11 +2,13 @@ import random
 from pathlib import Path
 import numpy as np
 import torch
+import os
 
 from data.shapenet import ShapeNet
 from model.model_2d import ImageEncoder
 from model.model_3d import PointCloudDecoder
 from utils.visualization import visualize_pointcloud, visualize_image
+from utils.losses import ChamferLoss
 
 
 class Inference2DToPointCloudVariational:
@@ -36,10 +38,8 @@ class Inference2DToPointCloudVariational:
         self.decoder.to(self.device)
 
     def infer(self):
-
-        # TODO: CHAMFER LOSS SHOULD BE DEFINED !!!!!!!!!!!
-        loss = ...
-        loss.to(self.device)
+        loss_function = ChamferLoss()
+        loss_function.to(self.device)
 
         mu, log_var = self.encoder(self.input["img"][12])
         std = torch.sqrt(torch.exp(log_var))
@@ -49,29 +49,34 @@ class Inference2DToPointCloudVariational:
         loss_value = []
         print("Groundtruth 2D image:")
         visualize_image(self.input["img"])
-        
-        print("Groundtruth pointcloud:")
+
+        print("Groundtruth point cloud:")
         visualize_pointcloud(self.input["point"])
-        
-        p="/content/term_project/generated_variatioal_pointclouds_from2d_image/"+str(self.pointcloud_filename)+"/"
+
+        p = (
+            "./generated_variatioal_pointclouds_from2d_image/"
+            + str(self.pointcloud_filename)
+            + "/"
+        )
         isExist = os.path.exists(p)
         if not isExist:
 
-           os.makedirs(p)
-        
-        
-            
+            os.makedirs(p)
+
         for i in range(len(pred_pointcloud)):
-            loss_value.append(loss(pred_pointcloud[i], self.input["point"]).item())
+            loss_value.append(
+                loss_function(pred_pointcloud[i], self.input["point"]).item()
+            )
 
             print("Chamfer loss value for prediction", i, ":", loss_value)
 
             print("Prediction:")
             visualize_pointcloud(pred_pointcloud[i])
-            
-            with open(p+str(self.pointcloud_filename)+'.npy', 'wb') as f:
-                np.save(f,pred_pointcloud)
-                self.pointcloud_filename+=1
+
+            with open(p + str(self.pointcloud_filename) + ".npy", "wb") as f:
+                np.save(f, pred_pointcloud)
+                self.pointcloud_filename += 1
+
 
 class Inference2DToPointCloudNormal:
     def __init__(self, inp, encoder_path, decoder_path, config, device):
@@ -98,34 +103,37 @@ class Inference2DToPointCloudNormal:
         self.encoder.eval()
         self.encoder.to(self.device)
         self.decoder.to(self.device)
-        self.pointcloud_filename=0
-        
+        self.pointcloud_filename = 0
+
     def infer(self):
 
         # TODO: CHAMFER LOSS SHOULD BE DEFINED !!!!!!!!!!!
-        loss = ...
-        loss.to(self.device)
+        loss_function = ChamferLoss()
+        loss_function.to(self.device)
 
         pred_pointcloud = self.decoder(self.encoder(self.input["img"][12]))
         print("Groundtruth 2D image:")
         visualize_image(self.input["img"])
-        
+
         print("Groundtruth pointcloud:")
         visualize_pointcloud(self.input["point"])
-        loss_value = loss(pred_pointcloud, self.input["point"]).item()
+        loss_value = loss_function(pred_pointcloud, self.input["point"]).item()
 
         print("Chamfer loss value for prediction:", loss_value)
 
         print("Prediction pointcloud:")
         visualize_pointcloud(pred_pointcloud)
-        
-        p="/content/term_project/generated_pointcloud_from2d_image/"+str(self.pointcloud_filename)+"/"
+
+        p = (
+            "/content/term_project/generated_pointcloud_from2d_image/"
+            + str(self.pointcloud_filename)
+            + "/"
+        )
         isExist = os.path.exists(p)
         if not isExist:
 
-           os.makedirs(p)
-        
-        with open(p+str(self.pointcloud_filename)+'.npy', 'wb') as f:
-            np.save(f,pred_pointcloud)
-            self.pointcloud_filename+=1
-            
+            os.makedirs(p)
+
+        with open(p + str(self.pointcloud_filename) + ".npy", "wb") as f:
+            np.save(f, pred_pointcloud)
+            self.pointcloud_filename += 1

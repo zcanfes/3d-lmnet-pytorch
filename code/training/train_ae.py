@@ -6,20 +6,20 @@ import torch
 import torch.optim as optim
 
 from model.model_3d_autoencoder import AutoEncoder
-from chamfer_distance.chamfer_distance import ChamferDistance
+from utils.losses import ChamferLoss
 from data.shapenet import ShapeNet
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--root', type=str, default='/content/term_project/data')
-parser.add_argument('--npoints', type=int, default=2048)
-parser.add_argument('--mpoints', type=int, default=2025)
-parser.add_argument('--batch_size', type=int, default=16)
-parser.add_argument('--lr', type=float, default=1e-4)
-parser.add_argument('--weight_decay', type=float, default=1e-6)
-parser.add_argument('--epochs', type=int, default=400)
-parser.add_argument('--num_workers', type=int, default=4)
-parser.add_argument('--log_dir', type=str, default='./log')
+parser.add_argument("--root", type=str, default="./data")
+parser.add_argument("--npoints", type=int, default=2048)
+parser.add_argument("--mpoints", type=int, default=2025)
+parser.add_argument("--batch_size", type=int, default=16)
+parser.add_argument("--lr", type=float, default=1e-4)
+parser.add_argument("--weight_decay", type=float, default=1e-6)
+parser.add_argument("--epochs", type=int, default=400)
+parser.add_argument("--num_workers", type=int, default=4)
+parser.add_argument("--log_dir", type=str, default="./log")
 args = parser.parse_args()
 
 # prepare training and testing dataset
@@ -46,30 +46,34 @@ def main(config):
         pin_memory=True,  # This is an implementation detail to speed up data uploading to the GPU
     )
 
-    valset = ShapeNet("valid")
-    valloader = torch.utils.data.DataLoader(
-        valset, batch_size=config["batch_size"], shuffle=False, num_workers=2
+    valid_dataset = ShapeNet("valid")
+    valid_dataloader = torch.utils.data.DataLoader(
+        valid_dataset, batch_size=config["batch_size"], shuffle=False, num_workers=2
     )
 
-
     # device
-    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+    device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
     # model
     autoencoder = AutoEncoder()
     autoencoder.to(device)
 
     # loss function
-    cd_loss = ChamferDistance()
+    cd_loss = ChamferLoss()
     # optimizer
-    optimizer = optim.Adam(autoencoder.parameters(), lr=args.lr, betas=[0.9, 0.999], weight_decay=args.weight_decay)
+    optimizer = optim.Adam(
+        autoencoder.parameters(),
+        lr=args.lr,
+        betas=[0.9, 0.999],
+        weight_decay=args.weight_decay,
+    )
 
     batches = int(len(train_dataset) / args.batch_size + 0.5)
 
     min_cd_loss = 1e3
     best_epoch = -1
 
-    print('\033[31mBegin Training...\033[0m')
+    print("\033[31mBegin Training...\033[0m")
     for epoch in range(1, args.epochs + 1):
         # training
         start = time.time()
@@ -80,14 +84,22 @@ def main(config):
             point_clouds = point_clouds.to(device)
             recons = autoencoder(point_clouds)
             ls = cd_loss(point_clouds.permute(0, 2, 1), recons.permute(0, 2, 1))
-            
+
             optimizer.zero_grad()
             ls.backward()
             optimizer.step()
 
             if (i + 1) % 100 == 0:
-                print('Epoch {}/{} with iteration {}/{}: CD loss is {}.'.format(epoch, args.epochs, i + 1, batches, ls.item() / len(point_clouds)))
-        
+                print(
+                    "Epoch {}/{} with iteration {}/{}: CD loss is {}.".format(
+                        epoch,
+                        args.epochs,
+                        i + 1,
+                        batches,
+                        ls.item() / len(point_clouds),
+                    )
+                )
+
         # evaluation
         autoencoder.eval()
         total_cd_loss = 0
@@ -99,7 +111,7 @@ def main(config):
                 recons = autoencoder(point_clouds)
                 ls = cd_loss(point_clouds.permute(0, 2, 1), recons.permute(0, 2, 1))
                 total_cd_loss += ls.item()
-        
+
         # calculate the mean cd loss
         mean_cd_loss = total_cd_loss / len(test_dataset)
 
@@ -107,15 +119,28 @@ def main(config):
         if mean_cd_loss < min_cd_loss:
             min_cd_loss = mean_cd_loss
             best_epoch = epoch
-            torch.save(autoencoder.state_dict(), os.path.join(args.log_dir, 'model_lowest_cd_loss.pth'))
-        
+            torch.save(
+                autoencoder.state_dict(),
+                os.path.join(args.log_dir, "model_lowest_cd_loss.pth"),
+            )
+
         # save the model every 100 epochs
         if (epoch) % 100 == 0:
-            torch.save(autoencoder.state_dict(), os.path.join(args.log_dir, 'model_epoch_{}.pth'.format(epoch)))
-        
+            torch.save(
+                autoencoder.state_dict(),
+                os.path.join(args.log_dir, "model_epoch_{}.pth".format(epoch)),
+            )
+
         end = time.time()
         cost = end - start
 
-        print('\033[32mEpoch {}/{}: reconstructed Chamfer Distance is {}. Minimum cd loss is {} in epoch {}.\033[0m'.format(
-            epoch, args.epochs, mean_cd_loss, min_cd_loss, best_epoch))
-        print('\033[31mCost {} minutes and {} seconds\033[0m'.format(int(cost // 60), int(cost % 60)))
+        print(
+            "\033[32mEpoch {}/{}: reconstructed Chamfer Distance is {}. Minimum cd loss is {} in epoch {}.\033[0m".format(
+                epoch, args.epochs, mean_cd_loss, min_cd_loss, best_epoch
+            )
+        )
+        print(
+            "\033[31mCost {} minutes and {} seconds\033[0m".format(
+                int(cost // 60), int(cost % 60)
+            )
+        )

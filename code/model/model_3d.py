@@ -3,12 +3,12 @@ import torch
 import torch.nn.functional as F
 import numpy as np
 
-"""
-    A decoding network which maps points from the latent space back onto the data space.
-"""
-
 
 class PointCloudDecoder(nn.Module):
+    """
+    A decoding network which maps points from the latent space back onto the data space.
+    """
+
     def __init__(
         self,
         input_size,
