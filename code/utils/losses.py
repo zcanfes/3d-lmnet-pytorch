@@ -10,11 +10,6 @@ class ChamferLoss:
     """
     Calculate chamfer, forward, backward distance between ground truth and predicted
     point clouds. They may or may not be scaled.
-    Args:
-            pcl_gt: tensor  shape (B,N,3) corresponding to GT point cloud
-            pred: tensor of shape (B,N,3) corresponding to predicted point cloud
-    Returns:
-            Fwd, Bwd, Chamfer: (B,)
     """
 
     def __call__(self, y_true, y_pred):
