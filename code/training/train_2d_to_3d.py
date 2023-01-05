@@ -12,7 +12,7 @@ from data.shapenet import ShapeNet
 
 
 def train(
-    model_image, model_pointcloud, train_dataloader, valid_dataloader, device, config
+    model_image, model_pointcloud, train_dataloader, val_dataloader, device, config
 ):
 
     loss_function = None
@@ -118,7 +118,7 @@ def train(
                 loss_total_val = 0
                 total, correct = 0, 0
                 # forward pass and evaluation for entire validation set
-                for batch_val in valid_dataloader:
+                for batch_val in val_dataloader:
                     ShapeNetVox.move_batch_to_device(batch_val, device)
 
                     with torch.no_grad():
@@ -133,7 +133,7 @@ def train(
                     ).item()
 
                 print(
-                    f"[{epoch:03d}/{i:05d}] val_loss: {loss_total_val / len(valid_dataloader):.3f}"
+                    f"[{epoch:03d}/{i:05d}] val_loss: {loss_total_val / len(val_dataloader):.3f}"
                 )
 
                 # TODO: calculate accuracy
@@ -189,7 +189,7 @@ def main(config):
     )
 
     val_dataset = ShapeNet("valid")
-    valid_dataloader = torch.utils.data.DataLoader(
+    val_dataloader = torch.utils.data.DataLoader(
         val_dataset, batch_size=config["batch_size"], shuffle=False, num_workers=2
     )
 
@@ -220,7 +220,7 @@ def main(config):
         model_image,
         model_pointcloud,
         train_dataloader,
-        valid_dataloader,
+        val_dataloader,
         device,
         config,
     )
