@@ -38,8 +38,8 @@ class Inference2DToPointCloudVariational:
         self.decoder.to(self.device)
 
     def infer(self):
-        loss_function = ChamferLoss()
-        loss_function.to(self.device)
+        loss_criterion = ChamferLoss()
+        loss_criterion.to(self.device)
 
         mu, log_var = self.encoder(self.input["img"][12])
         std = torch.sqrt(torch.exp(log_var))
@@ -64,8 +64,9 @@ class Inference2DToPointCloudVariational:
             os.makedirs(p)
 
         for i in range(len(pred_pointcloud)):
+            _, _, distance = loss_criterion(pred_pointcloud[i], self.input["point"]).item()
             loss_value.append(
-                loss_function(pred_pointcloud[i], self.input["point"]).item()
+                distance
             )
 
             print("Chamfer loss value for prediction", i, ":", loss_value)
@@ -108,8 +109,8 @@ class Inference2DToPointCloudNormal:
     def infer(self):
 
         # TODO: CHAMFER LOSS SHOULD BE DEFINED !!!!!!!!!!!
-        loss_function = ChamferLoss()
-        loss_function.to(self.device)
+        loss_criterion = ChamferLoss()
+        loss_criterion.to(self.device)
 
         pred_pointcloud = self.decoder(self.encoder(self.input["img"][12]))
         print("Groundtruth 2D image:")
@@ -117,7 +118,7 @@ class Inference2DToPointCloudNormal:
 
         print("Groundtruth pointcloud:")
         visualize_pointcloud(self.input["point"])
-        loss_value = loss_function(pred_pointcloud, self.input["point"]).item()
+        _, _, loss_value = loss_criterion(pred_pointcloud, self.input["point"]).item()
 
         print("Chamfer loss value for prediction:", loss_value)
 

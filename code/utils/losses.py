@@ -4,19 +4,19 @@ import numpy as np
 
 
 class DiversityLoss:
-    def get_alpha(self, azimuth):
-        penalty_angle = np.pi / 180.0 * self.penalty_angle
-
-        return self.alpha * np.exp(-((azimuth - np.pi) ** 2 / (penalty_angle**2)))
+    def __init__(self, alpha, penalty_angle):
+        self.alpha = alpha
+        self.penalty_angle = penalty_angle
 
     def __call__(self, azimuth_input, z_sigma):
         z_alpha = self.get_alpha(azimuth_input)
         L_reg = torch.mean((torch.mean(z_sigma, dim=-1) - z_alpha) ** 2)
         return L_reg
 
-    def __init__(self, alpha, penalty_angle):
-        self.alpha = alpha
-        self.penalty_angle = penalty_angle
+    def get_alpha(self, azimuth):
+        penalty_angle = np.pi / 180.0 * self.penalty_angle
+
+        return self.alpha * np.exp(-((azimuth - np.pi) ** 2 / (penalty_angle**2)))
 
 
 class ChamferLoss:

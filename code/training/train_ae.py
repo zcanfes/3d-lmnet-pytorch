@@ -59,7 +59,7 @@ def main(config):
     autoencoder.to(device)
 
     # loss function
-    cd_loss = ChamferLoss()
+    chamfer_loss = ChamferLoss()
     # optimizer
     optimizer = optim.Adam(
         autoencoder.parameters(),
@@ -70,7 +70,7 @@ def main(config):
 
     batches = int(len(train_dataset) / args.batch_size + 0.5)
 
-    min_cd_loss = 1e3
+    min_chamfer_loss = 1e3
     best_epoch = -1
 
     print("\033[31mBegin Training...\033[0m")
@@ -83,10 +83,10 @@ def main(config):
             point_clouds = point_clouds.permute(0, 2, 1)
             point_clouds = point_clouds.to(device)
             recons = autoencoder(point_clouds)
-            ls = cd_loss(point_clouds.permute(0, 2, 1), recons.permute(0, 2, 1))
+            loss = chamfer_loss(point_clouds.permute(0, 2, 1), recons.permute(0, 2, 1))
 
             optimizer.zero_grad()
-            ls.backward()
+            loss.backward()
             optimizer.step()
 
             if (i + 1) % 100 == 0:
@@ -96,32 +96,34 @@ def main(config):
                         args.epochs,
                         i + 1,
                         batches,
-                        ls.item() / len(point_clouds),
+                        loss.item() / len(point_clouds),
                     )
                 )
 
         # evaluation
         autoencoder.eval()
-        total_cd_loss = 0
+        total_chamfer_loss = 0
         with torch.no_grad():
             for data in test_dataloader:
                 point_clouds, _ = data
                 point_clouds = point_clouds.permute(0, 2, 1)
                 point_clouds = point_clouds.to(device)
                 recons = autoencoder(point_clouds)
-                ls = cd_loss(point_clouds.permute(0, 2, 1), recons.permute(0, 2, 1))
-                total_cd_loss += ls.item()
+                _, _, loss = chamfer_loss(
+                    point_clouds.permute(0, 2, 1), recons.permute(0, 2, 1)
+                )
+                total_chamfer_loss += loss.item()
 
         # calculate the mean cd loss
-        mean_cd_loss = total_cd_loss / len(test_dataset)
+        mean_chamfer_loss = total_chamfer_loss / len(test_dataset)
 
         # records the best model and epoch
-        if mean_cd_loss < min_cd_loss:
-            min_cd_loss = mean_cd_loss
+        if mean_chamfer_loss < min_chamfer_loss:
+            min_chamfer_loss = mean_chamfer_loss
             best_epoch = epoch
             torch.save(
                 autoencoder.state_dict(),
-                os.path.join(args.log_dir, "model_lowest_cd_loss.pth"),
+                os.path.join(args.log_dir, "model_lowest_chamfer_loss.pth"),
             )
 
         # save the model every 100 epochs
@@ -135,8 +137,8 @@ def main(config):
         cost = end - start
 
         print(
-            "\033[32mEpoch {}/{}: reconstructed Chamfer Distance is {}. Minimum cd loss is {} in epoch {}.\033[0m".format(
-                epoch, args.epochs, mean_cd_loss, min_cd_loss, best_epoch
+            "\033[32mEpoch {}/{}: reconstructed Chamfer Distance is {}. Minimum Chamfer loss is {} in epoch {}.\033[0m".format(
+                epoch, args.epochs, mean_chamfer_loss, min_chamfer_loss, best_epoch
             )
         )
         print(

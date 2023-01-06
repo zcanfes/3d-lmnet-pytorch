@@ -15,7 +15,7 @@ def train(
     model_image, model_pointcloud, train_dataloader, val_dataloader, device, config
 ):
 
-    loss_function = None
+    loss_criterion = None
     if config["loss_criterion"] == "variational":
 
         # TODO: DiversityLoss TANIMLA !!!!!!!
@@ -26,8 +26,7 @@ def train(
 
         loss_latent_matching = SquaredEuclideanError()
 
-        # TODO: Config Lambda tanimla!!!
-        loss_function = loss_latent_matching + config["lambda"] * loss_div
+        # TODO: Config Lambda tanimla!!
 
         optimizer = torch.optim.Adam(
             [
@@ -50,9 +49,9 @@ def train(
         )
     else:
         if config["loss_criterion"] == "L1":
-            loss_function = LeastAbsoluteError()
+            loss_criterion = LeastAbsoluteError()
         else:
-            loss_function = SquaredEuclideanError()
+            loss_criterion = SquaredEuclideanError()
 
         optimizer = torch.optim.Adam(
             [
@@ -68,7 +67,6 @@ def train(
                 },
             ]
         )
-    loss.to(device)
     model_image.train()
     model_pointcloud.eval()
 
@@ -86,12 +84,24 @@ def train(
             optimizer.zero_grad()
 
             mu, log_var = model_image(batch["img"][12])
-            # TODO: IMLEMENT SAMPLING !!!!!!!
+            # TODO: IMPLEMENT SAMPLING !!!!!!!
             std = torch.sqrt(torch.exp(log_var))
             predicted_latent_from_2d = mu + torch.randn(std.size()) * std
 
             latent_from_pointcloud = model_pointcloud(batch["point"])
-            loss = loss_function(predicted_latent_from_2d, latent_from_pointcloud)
+
+            if config["loss_criterion"] == "variational":
+                loss_latent_matching.to(device)
+                loss_div.to(device)
+
+                loss = loss_latent_matching(
+                    predicted_latent_from_2d, latent_from_pointcloud
+                ) + config["lambda"] * loss_div(
+                    config["penalty_angle"], predicted_latent_from_2d
+                )
+            else:
+                loss_criterion.to(device)
+                loss = loss_criterion(predicted_latent_from_2d, latent_from_pointcloud)
 
             loss.backward()
 
