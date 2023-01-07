@@ -3,10 +3,10 @@ from pathlib import Path
 import torch
 import torch.nn as nn
 
-from code.model import ImageEncoder
-from code.model import PointCloudEncoder, PointCloudDecoder
+from model.model_2d import ImageEncoder
+from model.model_3d_autoencoder import Encoder
 
-from utils.losses import DiversityLoss
+from utils.losses import DiversityLoss, SquaredEuclideanError, LeastAbsoluteError
 
 from data.shapenet import ShapeNet
 
@@ -21,9 +21,6 @@ def train(
         # TODO: DiversityLoss TANIMLA !!!!!!!
 
         loss_div = DiversityLoss(config["alpha"], config["penalty_angle"])
-
-        # TODO: loss toplama boyle oluyor mu??
-
         loss_latent_matching = nn.MSELoss()
 
         # TODO: Config Lambda tanimla!!
@@ -153,7 +150,7 @@ def train(
                 if accuracy > best_accuracy:
                     torch.save(
                         model_image.state_dict(),
-                        f'term_project/runs/{config["experiment_name"]}/model_best.ckpt',
+                        f'3d-lmnet-pytorch/3d-lmnet-pytorch/runs/{config["experiment_name"]}/model_best.ckpt',
                     )
                     best_accuracy = accuracy
 
@@ -164,7 +161,7 @@ def train(
 def main(config):
     """
     :param config: configuration for training - has the following keys
-                   'experiment_name': name of the experiment, checkpoint will be saved to folder "term_project/runs/<experiment_name>"
+                   'experiment_name': name of the experiment, checkpoint will be saved to folder "3d-lmnet-pytorch/3d-lmnet-pytorch/runs/<experiment_name>"
                    'device': device on which model is trained, e.g. 'cpu' or 'cuda:0'
                    'num_sample_points': number of sdf samples per shape while training
                    'bottleneck': length of the final latent vector
@@ -176,7 +173,7 @@ def main(config):
                    'ThreeDeeEncoderPath': path to the learned weights of ThreeDeeEncoder model
                    'visualize_every_n': visualize some training shapes every n iterations
                    'final_layer: if it is "variational" then mu and std are predicted or else a latent vector is predicted
-                   'is_overfit': if the training is done on a small subset of data specified in term_project/split/overfit.txt,
+                   'is_overfit': if the training is done on a small subset of data specified in 3d-lmnet-pytorch/3d-lmnet-pytorch/split/overfit.txt,
                                  train and validation done on the same set, so error close to 0 means a good overfit. Useful for debugging.
     """
 
@@ -207,7 +204,7 @@ def main(config):
     model_image = ImageEncoder(config["final_layer"], config["bottleneck"])
 
     # upload learned weights !!!!!!!!!
-    model_pointcloud = PointCloudEncoder.load_state_dict(
+    model_pointcloud = Encoder.load_state_dict(
         torch.load(config["3d_encoder_path"], map_location="cpu")
     )
 
@@ -221,7 +218,7 @@ def main(config):
     model_image.to(device)
     model_pointcloud.to(device)
     # Create folder for saving checkpoints
-    Path(f'term_project/runs/{config["experiment_name"]}').mkdir(
+    Path(f'3d-lmnet-pytorch/3d-lmnet-pytorch/runs/{config["experiment_name"]}').mkdir(
         exist_ok=True, parents=True
     )
 

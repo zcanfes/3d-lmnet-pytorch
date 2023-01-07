@@ -10,17 +10,7 @@ from utils.losses import ChamferLoss
 from data.shapenet import ShapeNet
 
 
-parser = argparse.ArgumentParser()
-parser.add_argument("--root", type=str, default="./data")
-parser.add_argument("--npoints", type=int, default=2048)
-parser.add_argument("--mpoints", type=int, default=2025)
-parser.add_argument("--batch_size", type=int, default=16)
-parser.add_argument("--lr", type=float, default=1e-4)
-parser.add_argument("--weight_decay", type=float, default=1e-6)
-parser.add_argument("--epochs", type=int, default=400)
-parser.add_argument("--num_workers", type=int, default=4)
-parser.add_argument("--log_dir", type=str, default="./log")
-args = parser.parse_args()
+
 
 # prepare training and testing dataset
 # train_dataset = ShapeNetPartDataset(root=args.root, npoints=args.npoints, split='train', classification=False, data_augmentation=True)
@@ -28,6 +18,17 @@ args = parser.parse_args()
 # train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers)
 # test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers)
 def main(config):
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--root", type=str, default="./data")
+    parser.add_argument("--npoints", type=int, default=2048)
+    parser.add_argument("--mpoints", type=int, default=2025)
+    parser.add_argument("--batch_size", type=int, default=16)
+    parser.add_argument("--lr", type=float, default=1e-4)
+    parser.add_argument("--weight_decay", type=float, default=1e-6)
+    parser.add_argument("--epochs", type=int, default=400)
+    parser.add_argument("--num_workers", type=int, default=4)
+    parser.add_argument("--log_dir", type=str, default="./log")
+    args = parser.parse_args()
     train_dataset = ShapeNet("train")
     train_dataloader = torch.utils.data.DataLoader(
         train_dataset,
