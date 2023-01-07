@@ -56,7 +56,7 @@ def main(config):
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
     # model
-    autoencoder = AutoEncoder(config["input_size"],config["hidden_size"],config["output_size"])
+    autoencoder = AutoEncoder(config["batch_size"],config["hidden_size"],config["bottleneck"])
     autoencoder.to(device)
 
     # loss function
@@ -79,14 +79,21 @@ def main(config):
         # training
         start = time.time()
         autoencoder.train()
+        #print(next(iter(train_dataloader)))
         for i, data in enumerate(train_dataloader):
-            point_clouds, _ = data
-            print(point_clouds)
-            point_clouds = point_clouds.to(device)
-            recons = autoencoder(point_clouds)
-            loss = chamfer_loss(point_clouds, recons)
+            #print(i)
+            ShapeNet.move_batch_to_device(data, device)
 
             optimizer.zero_grad()
+
+            point_clouds = data["point"]
+            point_clouds = point_clouds.permute(0, 2, 1)
+            point_clouds=point_clouds.type(torch.cuda.FloatTensor)
+            #point_clouds = point_clouds.to(device)
+            recons = autoencoder(point_clouds)
+            loss = chamfer_loss(point_clouds.permute(0, 2, 1), recons.permute(0, 2, 1))
+
+           # optimizer.zero_grad()
             loss.backward()
             optimizer.step()
 
@@ -105,12 +112,18 @@ def main(config):
         autoencoder.eval()
         total_chamfer_loss = 0
         with torch.no_grad():
-            for data in test_dataloader:
-                point_clouds, _ = data
-                point_clouds = point_clouds.to(device)
+            for data in val_dataloader:
+                ShapeNet.move_batch_to_device(data, device)
+
+                optimizer.zero_grad()
+
+                point_clouds = data["point"]
+                #point_clouds = point_clouds.to(device)
+                point_clouds = point_clouds.permute(0, 2, 1)
+                point_clouds=point_clouds.type(torch.cuda.FloatTensor)
                 recons = autoencoder(point_clouds)
                 _, _, loss = chamfer_loss(
-                    point_clouds, recons
+                    point_clouds.permute(0, 2, 1), recons.permute(0, 2, 1)
                 )
                 total_chamfer_loss += loss.item()
 

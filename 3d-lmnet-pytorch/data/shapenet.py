@@ -69,8 +69,10 @@ class ShapeNet(torch.utils.data.Dataset):
     @staticmethod
     def get_point_numpy(shapenet_id):
         np_arr = np.load(ShapeNet.point_path / shapenet_id / "pointcloud_2048.npy")
+        
+        convertedArray = np_arr.astype(np.float)
 
-        return np_arr
+        return convertedArray
 
     @staticmethod
     def get_img_numpy(shapenet_id):

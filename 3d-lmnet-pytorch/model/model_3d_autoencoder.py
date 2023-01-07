@@ -12,20 +12,30 @@ class Encoder(nn.Module):
     """
     Encoder Module
     """
-    def __init__(self):
+    def __init__(
+        self,
+        input_size,
+        hidden_size,
+        output_size,
+        bnorm=True,
+        bnorm_final=False,
+        regularizer=None,
+        weight_decay=0.001,
+        dropout_prob=None,
+    ):
         super(Encoder, self).__init__()
-        self.conv1 = nn.Conv1d(64, 64, 1)
+        self.conv1 = nn.Conv1d(3, 64, 1)
         self.conv2 = nn.Conv1d(64, 128, 1)
         self.conv3 = nn.Conv1d(128, 128, 1)
         self.conv4 = nn.Conv1d(128, 256, 1)
-        self.conv5 = nn.Conv1d(256, 256, 1)
+        self.conv5 = nn.Conv1d(256, 512, 1)
         
         
-        self.bn1 = nn.BatchNorm1d(256)
-        self.bn2 = nn.BatchNorm1d(256)
-        self.bn3 = nn.BatchNorm1d(256)
+        self.bn1 = nn.BatchNorm1d(64)
+        self.bn2 = nn.BatchNorm1d(128)
+        self.bn3 = nn.BatchNorm1d(128)
         self.bn4 = nn.BatchNorm1d(256)
-        self.bn5 = nn.BatchNorm1d(256)
+        self.bn5 = nn.BatchNorm1d(512)
 
        
         # bottleneck ?!
