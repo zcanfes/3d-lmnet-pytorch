@@ -9,11 +9,11 @@ import cv2
 
 class ShapeNet(torch.utils.data.Dataset):
     num_classes = 13
-    img_path = Path("/content/term_project/data/ShapeNetRendering")
-    point_path = Path("/content/term_project/data/ShapeNet_pointclouds")
+    img_path = Path("/content/3d-lmnet-pytorch/3d-lmnet-pytorch/data/ShapeNetRendering")
+    point_path = Path("/content/3d-lmnet-pytorch/3d-lmnet-pytorch/data/ShapeNet_pointclouds")
 
     class_name_mapping = json.loads(
-        Path("/content/term_project/data/shape_info.json").read_text()
+        Path("/content/3d-lmnet-pytorch/3d-lmnet-pytorch/data/shape_info.json").read_text()
     )  # mapping for ShapeNet ids -> names
     classes = sorted(class_name_mapping.keys())
 
@@ -24,7 +24,7 @@ class ShapeNet(torch.utils.data.Dataset):
         if cat == 3:
             self.point_items = (
                 Path(
-                    f"/content/term_project/data/splits/shapenet_point_cat3/{split}_cat3.txt"
+                    f"/content/3d-lmnet-pytorch/3d-lmnet-pytorch/data/splits/shapenet_point_cat3/{split}_cat3.txt"
                 )
                 .read_text()
                 .splitlines()
@@ -33,7 +33,7 @@ class ShapeNet(torch.utils.data.Dataset):
         elif cat == 1:
             self.point_items = (
                 Path(
-                    f"/content/term_project/data/splits/shapenet_point_chair/{split}_chair.txt"
+                    f"/content/3d-lmnet-pytorch/3d-lmnet-pytorch/data/splits/shapenet_point_chair/{split}_chair.txt"
                 )
                 .read_text()
                 .splitlines()
@@ -41,7 +41,7 @@ class ShapeNet(torch.utils.data.Dataset):
 
         else:
             self.point_items = (
-                Path(f"/content/term_project/data/splits/shapenet_point/{split}.txt")
+                Path(f"/content/3d-lmnet-pytorch/3d-lmnet-pytorch/data/splits/shapenet_point/{split}.txt")
                 .read_text()
                 .splitlines()
             )  # keep track of shapes based on split
