@@ -33,23 +33,3 @@ class ChamferLoss:
         dists_backward = torch.mean(torch.sqrt(dists_backward), dim=1)
         chamfer_distance = dists_backward + dists_forward
         return dists_forward, dists_backward, chamfer_distance
-
-
-class SquaredEuclideanError:
-    """
-    Calculate L2 loss between ground truth and predicted latent presentations.
-    """
-
-    def __call__(self, y_true, y_pred):
-        l2 = torch.mean((y_true - y_pred) ** 2)
-        return l2
-
-
-class LeastAbsoluteError:
-    """
-    Calculate L1 loss between ground truth and predicted latent presentations.
-    """
-
-    def __call__(self, y_true, y_pred):
-        l1 = torch.mean(torch.abs(y_true - y_pred))
-        return l1

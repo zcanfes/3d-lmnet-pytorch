@@ -6,7 +6,7 @@ import torch.nn as nn
 from code.model import ImageEncoder
 from code.model import PointCloudEncoder, PointCloudDecoder
 
-from utils.losses import DiversityLoss, SquaredEuclideanError, LeastAbsoluteError
+from utils.losses import DiversityLoss
 
 from data.shapenet import ShapeNet
 
@@ -24,7 +24,7 @@ def train(
 
         # TODO: loss toplama boyle oluyor mu??
 
-        loss_latent_matching = SquaredEuclideanError()
+        loss_latent_matching = nn.MSELoss()
 
         # TODO: Config Lambda tanimla!!
 
@@ -49,9 +49,9 @@ def train(
         )
     else:
         if config["loss_criterion"] == "L1":
-            loss_criterion = LeastAbsoluteError()
+            loss_criterion = nn.L1Loss()
         else:
-            loss_criterion = SquaredEuclideanError()
+            loss_criterion = nn.MSELoss()
 
         optimizer = torch.optim.Adam(
             [
