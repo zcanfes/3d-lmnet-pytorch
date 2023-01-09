@@ -42,7 +42,7 @@ class Encoder(nn.Module):
 
         # Local Max Pooling
         x = torch.max(x, dim=-1)[0]
-        print("tensor size after encoder " + str(x.size()))
+        #print("tensor size after encoder " + str(x.size()))
         return x
 
 
@@ -61,7 +61,7 @@ class Decoder(nn.Module):
         weight_decay=0.001,
         dropout_prob=None,
     ):
-        print(" initial input " + str(input_size) + " initial hidden " + str(hidden_size) + " initial output " + str(output_size) )
+        #print(" initial input " + str(input_size) + " initial hidden " + str(hidden_size) + " initial output " + str(output_size) )
         super().__init__()
         self.bnorm = bnorm
         self.bnorm_final = bnorm_final
@@ -84,6 +84,7 @@ class Decoder(nn.Module):
         self.relu = F.relu
 
     def forward(self, x):
+        #print("\ninitial tensor size in decoder " + str(x.size()))
         x = self.fc1(x)
         if self.bnorm:
             x = self.bn1(x)
@@ -102,7 +103,8 @@ class Decoder(nn.Module):
         x = self.fc3(x)
         if self.bnorm_final:
             x = self.bn3(x)
-        print("tensor size after decoder " + str(x.size()))
+        x = x.reshape(16,2048,3)
+        #print("tensor size after decoder " + str(x.size())+ "\n")
         return x
 
 class AutoEncoder(nn.Module):

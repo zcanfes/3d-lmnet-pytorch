@@ -25,11 +25,18 @@ class ChamferLoss:
     point clouds. They may or may not be scaled.
     """
 
-    def __call__(self, y_true, y_pred):
-        dists_forward, _ = torch.cdist(y_true, y_pred, p=2)
-        dists_backward, _ = torch.cdist(y_pred, y_true, p=2)
+    def __init__(self):
+        self.history = {}
+
+    def backward(self):
+        return self.history["backward"]
+
+    def forward(self, y_true, y_pred):
+        dists_forward = torch.cdist(y_true, y_pred, p=2)
+        dists_backward = torch.cdist(y_pred, y_true, p=2)
 
         dists_forward = torch.mean(torch.sqrt(dists_forward), dim=1)
         dists_backward = torch.mean(torch.sqrt(dists_backward), dim=1)
         chamfer_distance = dists_backward + dists_forward
+        self.history["backward"] = dists_backward
         return dists_forward, dists_backward, chamfer_distance

@@ -56,11 +56,10 @@ def main(config):
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
     # model
-    autoencoder = AutoEncoder(config["bottleneck"],config["batch_size"],3)
+    autoencoder = AutoEncoder(config["bottleneck"],config["batch_size"],config["output_size"])
     autoencoder.to(device)
 
     # loss function
-    chamfer_loss = ChamferLoss()
     # optimizer
     optimizer = optim.Adam(
         autoencoder.parameters(),
@@ -88,27 +87,25 @@ def main(config):
 
             point_clouds = data["point"]
             point_clouds = point_clouds.permute(0, 2, 1)
-            print("initial point cloud size " + str(point_clouds.size()))
+            #print("initial point cloud size " + str(point_clouds.size()))
             point_clouds=point_clouds.type(torch.cuda.FloatTensor)
             #point_clouds = point_clouds.to(device)
             #print("here")
             
             recons = autoencoder(point_clouds)
-            recons = recons.unsqueeze(2)
-            print("recons size " + str(recons.size()))
+            #recons = recons.unsqueeze(2)
+            #print("recons size " + str(recons.size()))
             
-            point_clouds = point_clouds.permute(0, 2, 1)
-            print("point cloud size before loss function " + str(point_clouds.size()))
+            #point_clouds = point_clouds.permute(0, 2, 1)
+            #print("point cloud size before loss function " + str(point_clouds.size()))
             
             recons = recons.permute(0, 2, 1)
-            print("recons size before loss function " + str(recons.size()))
+            #print("recons size before loss function " + str(recons.size()))
 
-            loss = chamfer_loss(point_clouds, recons)
-
-           # optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
-
+            chamfer_loss = ChamferLoss()
+            loss, _, chamfer_distance =  chamfer_loss.forward(point_clouds, recons)
+            grad = chamfer_loss.backward()
+            optimizer.step(grad)
             if (i + 1) % 100 == 0:
                 print(
                     "Epoch {}/{} with iteration {}/{}: CD loss is {}.".format(
@@ -116,7 +113,7 @@ def main(config):
                         config["max_epochs"],
                         i + 1,
                         batches,
-                        loss.item() / len(point_clouds),
+                        chamfer_distance / len(point_clouds),
                     )
                 )
         print("skipped")
