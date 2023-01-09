@@ -56,7 +56,7 @@ def main(config):
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
     # model
-    autoencoder = AutoEncoder(config["batch_size"],config["hidden_size"],config["bottleneck"])
+    autoencoder = AutoEncoder(config["bottleneck"],config["batch_size"],3)
     autoencoder.to(device)
 
     # loss function
@@ -88,10 +88,22 @@ def main(config):
 
             point_clouds = data["point"]
             point_clouds = point_clouds.permute(0, 2, 1)
+            print("initial point cloud size " + str(point_clouds.size()))
             point_clouds=point_clouds.type(torch.cuda.FloatTensor)
             #point_clouds = point_clouds.to(device)
+            #print("here")
+            
             recons = autoencoder(point_clouds)
-            loss = chamfer_loss(point_clouds.permute(0, 2, 1), recons.permute(0, 2, 1))
+            recons = recons.unsqueeze(2)
+            print("recons size " + str(recons.size()))
+            
+            point_clouds = point_clouds.permute(0, 2, 1)
+            print("point cloud size before loss function " + str(point_clouds.size()))
+            
+            recons = recons.permute(0, 2, 1)
+            print("recons size before loss function " + str(recons.size()))
+
+            loss = chamfer_loss(point_clouds, recons)
 
            # optimizer.zero_grad()
             loss.backward()
@@ -107,7 +119,7 @@ def main(config):
                         loss.item() / len(point_clouds),
                     )
                 )
-
+        print("skipped")
         # evaluation
         autoencoder.eval()
         total_chamfer_loss = 0

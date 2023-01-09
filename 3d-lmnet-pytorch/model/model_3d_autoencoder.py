@@ -13,15 +13,7 @@ class Encoder(nn.Module):
     Encoder Module
     """
     def __init__(
-        self,
-        input_size,
-        hidden_size,
-        output_size,
-        bnorm=True,
-        bnorm_final=False,
-        regularizer=None,
-        weight_decay=0.001,
-        dropout_prob=None,
+        self
     ):
         super(Encoder, self).__init__()
         self.conv1 = nn.Conv1d(3, 64, 1)
@@ -38,9 +30,6 @@ class Encoder(nn.Module):
         self.bn5 = nn.BatchNorm1d(512)
 
        
-        # bottleneck ?!
-        # self.conv6 = nn.Conv1d(512, 256, 1)
-        # self.bn6 = nn.BatchNorm1d(512)
         
     def forward(self, x):
 
@@ -53,7 +42,9 @@ class Encoder(nn.Module):
 
         # Local Max Pooling
         x = torch.max(x, dim=-1)[0]
+        print("tensor size after encoder " + str(x.size()))
         return x
+
 
 class Decoder(nn.Module):
     """
@@ -70,6 +61,7 @@ class Decoder(nn.Module):
         weight_decay=0.001,
         dropout_prob=None,
     ):
+        print(" initial input " + str(input_size) + " initial hidden " + str(hidden_size) + " initial output " + str(output_size) )
         super().__init__()
         self.bnorm = bnorm
         self.bnorm_final = bnorm_final
@@ -110,7 +102,7 @@ class Decoder(nn.Module):
         x = self.fc3(x)
         if self.bnorm_final:
             x = self.bn3(x)
-
+        print("tensor size after decoder " + str(x.size()))
         return x
 
 class AutoEncoder(nn.Module):
@@ -126,5 +118,7 @@ class AutoEncoder(nn.Module):
 
     def forward(self, x):
         x = self.encoder(x)
+       
         x = self.decoder(x)
+        
         return x
