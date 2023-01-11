@@ -118,7 +118,7 @@ def train(
             if iteration % config["validate_every_n"] == (
                 config["validate_every_n"] - 1
             ):
-
+                loss=ChamferLoss()
                 # set model to eval, important if your network has e.g. dropout or batchnorm layers
                 model_image.eval()
 
@@ -126,7 +126,7 @@ def train(
                 total, correct = 0, 0
                 # forward pass and evaluation for entire validation set
                 for batch_val in val_dataloader:
-                    ShapeNetVox.move_batch_to_device(batch_val, device)
+                    ShapeNet.move_batch_to_device(batch_val, device)
 
                     with torch.no_grad():
                         mu, log_var = model_image(batch_val["img"][12])
@@ -145,14 +145,14 @@ def train(
 
                 # TODO: calculate accuracy
 
-                accuracy = ...
-
-                if accuracy > best_accuracy:
+                distace = loss_total_val
+                print("Total chamfer distance:",distance)
+                if distace > best_distance:
                     torch.save(
                         model_image.state_dict(),
                         f'3d-lmnet-pytorch/3d-lmnet-pytorch/runs/{config["experiment_name"]}/model_best.ckpt',
                     )
-                    best_accuracy = accuracy
+                    best_distance = distance
 
                 # set model back to train
                 model_image.train()
