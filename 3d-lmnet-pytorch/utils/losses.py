@@ -43,7 +43,7 @@ class ChamferLoss(torch.autograd.Function):
     def backward(ctx):
         yy_true, yy_pred = ctx.saved_tensors
 
-        dists_backward = torch.cdist(yy_pred, yy_true, p=2)
+        dists_backward = torch.cdist(yy_true, yy_pred, p=2)
         dists_backward = torch.sqrt(dists_backward).mean()
 
         return dists_backward
