@@ -84,7 +84,7 @@ class Decoder(nn.Module):
         self.relu = F.relu
 
     def forward(self, x):
-        print("\ninitial tensor size in decoder " + str(x.size()))
+        # print("\ninitial tensor size in decoder " + str(x.size()))
         x = self.fc1(x)
         if self.bnorm:
             x = self.bn1(x)
@@ -103,8 +103,8 @@ class Decoder(nn.Module):
         x = self.fc3(x)
         if self.bnorm_final:
             x = self.bn3(x)
-        print("tensor size after decoder " + str(x.size())+ "\n")
-        x = x.reshape(16,2048,3)
+        # print("tensor size after decoder " + str(x.size())+ "\n")
+        x = x.reshape(16,3,2048) # This should be same with the input point cloud shape and be compatible with conv layer
         #print("tensor size after decoder " + str(x.size())+ "\n")
         return x
 
