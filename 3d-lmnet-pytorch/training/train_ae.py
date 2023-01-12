@@ -94,8 +94,11 @@ def main(config):
             point_clouds = point_clouds.permute(0, 2, 1)
             point_clouds=point_clouds.type(torch.cuda.FloatTensor)
             #point_clouds = point_clouds.to(device)
+
             recons = autoencoder(point_clouds)
-            recons = recons.permute(0, 2, 1)
+
+            # if i > 1600:
+            #   print("iteration: ", i, "|| point clouds: ", point_clouds.shape, "|| reconstruction: ", recons.shape)
             loss = ChamferLoss.apply(point_clouds.permute(0, 2, 1), recons.permute(0, 2, 1))
            # optimizer.zero_grad()
             optimizer.step()
@@ -122,13 +125,15 @@ def main(config):
                 optimizer.zero_grad()
 
                 point_clouds = data["point"]
-                #point_clouds = point_clouds.to(device)
+                # print("point_clouds shape:", point_clouds.shape)
                 point_clouds = point_clouds.permute(0, 2, 1)
                 point_clouds=point_clouds.type(torch.cuda.FloatTensor)
+                #point_clouds = point_clouds.to(device)
+
+
                 recons = autoencoder(point_clouds)
-                loss = ChamferLoss.apply(
-                    point_clouds.permute(0, 2, 1), recons.permute(0, 2, 1)
-                )
+
+                loss = ChamferLoss.apply(point_clouds.permute(0, 2, 1), recons.permute(0, 2, 1))
                 total_chamfer_loss += loss.item()
 
         # calculate the mean cd loss
