@@ -36,6 +36,7 @@ def main(config):
         shuffle=True,  # Shuffling the order of samples is useful during training to prevent that the network learns to depend on the order of the input data
         num_workers=config["num_workers"],
         pin_memory=True,  # This is an implementation detail to speed up data uploading to the GPU
+        drop_last=True
     )
 
     test_dataset = ShapeNet("test")
@@ -45,21 +46,24 @@ def main(config):
         shuffle=True,  # Shuffling the order of samples is useful during training to prevent that the network learns to depend on the order of the input data
         num_workers=config["num_workers"],
         pin_memory=True,  # This is an implementation detail to speed up data uploading to the GPU
+        drop_last=True
     )
 
     val_dataset = ShapeNet("valid")
     val_dataloader = torch.utils.data.DataLoader(
-        val_dataset, batch_size=config["batch_size"], shuffle=False, num_workers=config["num_workers"]
+        val_dataset, batch_size=config["batch_size"], shuffle=False, num_workers=config["num_workers"],
+        drop_last=True
     )
 
     # device
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
     # model
-    autoencoder = AutoEncoder(config["bottleneck"],config["batch_size"],config["output_size"])
+    autoencoder = AutoEncoder(config["bottleneck"],config["hidden_size"],config["output_size"])
     autoencoder.to(device)
 
     # loss function
+    # chamfer_loss = ChamferLoss.apply()
     # optimizer
     optimizer = optim.Adam(
         autoencoder.parameters(),
@@ -68,7 +72,7 @@ def main(config):
         weight_decay=config["weight_decay"],
     )
 
-    batches = int(len(train_dataset) / config["batch_size"] + 0.5)
+    batches = int(len(train_dataset) / config["batch_size"])
 
     min_chamfer_loss = 1e3
     best_epoch = -1
@@ -86,26 +90,17 @@ def main(config):
             optimizer.zero_grad()
 
             point_clouds = data["point"]
+            # print("point_clouds shape:", point_clouds.shape)
             point_clouds = point_clouds.permute(0, 2, 1)
-            #print("initial point cloud size " + str(point_clouds.size()))
             point_clouds=point_clouds.type(torch.cuda.FloatTensor)
             #point_clouds = point_clouds.to(device)
-            #print("here")
-            
             recons = autoencoder(point_clouds)
-            #recons = recons.unsqueeze(2)
-            #print("recons size " + str(recons.size()))
-            
-            #point_clouds = point_clouds.permute(0, 2, 1)
-            #print("point cloud size before loss function " + str(point_clouds.size()))
-            
             recons = recons.permute(0, 2, 1)
-            #print("recons size before loss function " + str(recons.size()))
+            loss = ChamferLoss.apply(point_clouds.permute(0, 2, 1), recons.permute(0, 2, 1))
+           # optimizer.zero_grad()
+            optimizer.step()
+            # print("loss value:", loss, " || loss shape: ", loss.shape)
 
-            chamfer_loss = ChamferLoss()
-            loss, _, chamfer_distance =  chamfer_loss.forward(point_clouds, recons)
-            grad = chamfer_loss.backward()
-            optimizer.step(grad)
             if (i + 1) % 100 == 0:
                 print(
                     "Epoch {}/{} with iteration {}/{}: CD loss is {}.".format(
@@ -113,10 +108,10 @@ def main(config):
                         config["max_epochs"],
                         i + 1,
                         batches,
-                        chamfer_distance / len(point_clouds),
+                        loss.item() # / len(point_clouds),
                     )
                 )
-        print("skipped")
+
         # evaluation
         autoencoder.eval()
         total_chamfer_loss = 0
@@ -131,7 +126,7 @@ def main(config):
                 point_clouds = point_clouds.permute(0, 2, 1)
                 point_clouds=point_clouds.type(torch.cuda.FloatTensor)
                 recons = autoencoder(point_clouds)
-                _, _, loss = chamfer_loss(
+                loss = ChamferLoss.apply(
                     point_clouds.permute(0, 2, 1), recons.permute(0, 2, 1)
                 )
                 total_chamfer_loss += loss.item()
