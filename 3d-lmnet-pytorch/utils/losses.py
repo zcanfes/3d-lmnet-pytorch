@@ -19,24 +19,31 @@ class DiversityLoss:
         return self.alpha * np.exp(-((azimuth - np.pi) ** 2 / (penalty_angle**2)))
 
 
-class ChamferLoss:
+
+
+class ChamferLoss(torch.autograd.Function):
     """
     Calculate chamfer, forward, backward distance between ground truth and predicted
     point clouds. They may or may not be scaled.
     """
 
-    def __init__(self):
-        self.history = {}
+    @staticmethod
+    def forward(ctx, y_true, y_pred):
+        ctx.save_for_backward(y_true, y_pred)
 
-    def backward(self):
-        return self.history["backward"]
-
-    def forward(self, y_true, y_pred):
         dists_forward = torch.cdist(y_true, y_pred, p=2)
-        dists_backward = torch.cdist(y_pred, y_true, p=2)
+        dists_forward = torch.sqrt(dists_forward).mean()
 
-        dists_forward = torch.mean(torch.sqrt(dists_forward), dim=1)
-        dists_backward = torch.mean(torch.sqrt(dists_backward), dim=1)
-        chamfer_distance = dists_backward + dists_forward
-        self.history["backward"] = dists_backward
-        return dists_forward, dists_backward, chamfer_distance
+        # print("dists forward shape:", dists_forward)
+
+        chamfer_distance = 2 * dists_forward
+        return chamfer_distance
+    
+    @staticmethod
+    def backward(ctx):
+        yy_true, yy_pred = ctx.saved_tensors
+
+        dists_backward = torch.cdist(yy_pred, yy_true, p=2)
+        dists_backward = torch.sqrt(dists_backward).mean()
+
+        return dists_backward
