@@ -4,10 +4,11 @@ import time
 
 import torch
 import torch.optim as optim
-
+import numpy as np
 from model.model_3d_autoencoder import AutoEncoder
 from utils.losses import ChamferLoss
 from data.shapenet import ShapeNet
+from utils.point_cloud import show_point_cloud
 
 
 
@@ -119,7 +120,9 @@ def main(config):
         autoencoder.eval()
         total_chamfer_loss = 0
         with torch.no_grad():
+            index=-1
             for data in val_dataloader:
+                index+=1
                 ShapeNet.move_batch_to_device(data, device)
 
                 optimizer.zero_grad()
@@ -129,9 +132,20 @@ def main(config):
                 point_clouds = point_clouds.permute(0, 2, 1)
                 point_clouds=point_clouds.type(torch.cuda.FloatTensor)
                 #point_clouds = point_clouds.to(device)
+                #point_clouds = point_clouds.cpu().numpy()
+                f_name = 'imgs/point_clouds/' + str(index) + '.npy'
+                with open(f_name, 'wb') as f:
+                    np.save(f, (point_clouds.cpu().numpy()))
 
+                #show_point_cloud(point_clouds)
 
                 recons = autoencoder(point_clouds)
+                #show_point_cloud(recons)
+                #recons = recons.cpu().numpy()
+                f_name_recons = 'imgs/recons/' + str(index) + '.npy'
+                with open(f_name_recons, 'wb') as f:
+                    np.save(f, (recons.cpu().numpy()))
+                #print(((recons.cpu().numpy())))
 
                 loss = ChamferLoss.apply(point_clouds.permute(0, 2, 1), recons.permute(0, 2, 1))
                 total_chamfer_loss += loss.item()
