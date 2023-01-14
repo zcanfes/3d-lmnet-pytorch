@@ -3,10 +3,12 @@ import os
 import time
 
 import torch
+import pytorch3d
 import torch.optim as optim
 import numpy as np
 from model.model_3d_autoencoder import AutoEncoder
-from utils.losses import ChamferLoss
+#from utils.losses import ChamferLoss
+from pytorch3d.loss import chamfer_distance
 from data.shapenet import ShapeNet
 from utils.point_cloud import show_point_cloud
 
@@ -77,7 +79,7 @@ def main(config):
 
     min_chamfer_loss = 1e3
     best_epoch = -1
-
+    
     print("\033[31mBegin Training...\033[0m")
     for epoch in range(1, config["max_epochs"] + 1):
         # training
@@ -100,8 +102,11 @@ def main(config):
 
             # if i > 1600:
             #   print("iteration: ", i, "|| point clouds: ", point_clouds.shape, "|| reconstruction: ", recons.shape)
-            loss = ChamferLoss.apply(point_clouds.permute(0, 2, 1), recons.permute(0, 2, 1))
-           # optimizer.zero_grad()
+            #loss = ChamferLoss.apply(point_clouds.permute(0, 2, 1), recons.permute(0, 2, 1))
+            
+            loss,_=chamfer_distance(point_clouds.permute(0, 2, 1), recons.permute(0, 2, 1))
+            loss.backward()
+
             optimizer.step()
             # print("loss value:", loss, " || loss shape: ", loss.shape)
 
@@ -112,7 +117,8 @@ def main(config):
                         config["max_epochs"],
                         i + 1,
                         batches,
-                        loss.item() # / len(point_clouds),
+                        loss.detach().cpu()
+                        #loss.item() # / len(point_clouds),
                     )
                 )
 
@@ -128,27 +134,31 @@ def main(config):
                 optimizer.zero_grad()
 
                 point_clouds = data["point"]
+                if index==0:
+                  f_name = 'imgs/gt/' + str(index) + '.npy'
+                  with open(f_name, 'wb') as f:
+                      np.save(f, (point_clouds.cpu().numpy()))
+
                 # print("point_clouds shape:", point_clouds.shape)
                 point_clouds = point_clouds.permute(0, 2, 1)
                 point_clouds=point_clouds.type(torch.cuda.FloatTensor)
                 #point_clouds = point_clouds.to(device)
                 #point_clouds = point_clouds.cpu().numpy()
-                f_name = 'imgs/point_clouds/' + str(index) + '.npy'
-                with open(f_name, 'wb') as f:
-                    np.save(f, (point_clouds.cpu().numpy()))
-
+                
                 #show_point_cloud(point_clouds)
 
                 recons = autoencoder(point_clouds)
                 #show_point_cloud(recons)
                 #recons = recons.cpu().numpy()
-                f_name_recons = 'imgs/recons/' + str(index) + '.npy'
+                f_name_recons = 'imgs/pred/' + str(index) + '.npy'
                 with open(f_name_recons, 'wb') as f:
-                    np.save(f, (recons.cpu().numpy()))
+                    np.save(f, (recons.permute(0, 2, 1).cpu().numpy()))
                 #print(((recons.cpu().numpy())))
 
-                loss = ChamferLoss.apply(point_clouds.permute(0, 2, 1), recons.permute(0, 2, 1))
-                total_chamfer_loss += loss.item()
+                #loss = ChamferLoss.apply(point_clouds.permute(0, 2, 1), recons.permute(0, 2, 1))
+                loss,_=chamfer_distance(point_clouds.permute(0, 2, 1), recons.permute(0, 2, 1))
+                total_chamfer_loss += loss.detach().cpu()
+                #total_chamfer_loss += loss.item()
 
         # calculate the mean cd loss
         mean_chamfer_loss = total_chamfer_loss / len(test_dataset)
@@ -182,3 +192,7 @@ def main(config):
                 int(cost // 60), int(cost % 60)
             )
         )
+    torch.save(
+          autoencoder.state_dict(),
+          os.path.join(config["log_dir"], "model_autoencoder_final.pth"),
+      )
