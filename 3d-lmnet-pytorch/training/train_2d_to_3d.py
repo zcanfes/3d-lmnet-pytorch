@@ -2,10 +2,10 @@ from pathlib import Path
 
 import torch
 import torch.nn as nn
-
+import pytorch3d
 from model.model_2d import ImageEncoder
 from model.model_3d_autoencoder import Encoder
-
+from pytorch3d.loss import chamfer_distance
 from utils.losses import DiversityLoss, SquaredEuclideanError, LeastAbsoluteError
 
 from data.shapenet import ShapeNet
@@ -88,8 +88,8 @@ def train(
             latent_from_pointcloud = model_pointcloud(batch["point"])
 
             if config["loss_criterion"] == "variational":
-                loss_latent_matching.to(device)
-                loss_div.to(device)
+                loss_latent_matching=loss_latent_matching.to(device)
+                loss_div=loss_div.to(device)
 
                 loss = loss_latent_matching(
                     predicted_latent_from_2d, latent_from_pointcloud
@@ -97,7 +97,7 @@ def train(
                     config["penalty_angle"], predicted_latent_from_2d
                 )
             else:
-                loss_criterion.to(device)
+                loss_criterion=loss_criterion.to(device)
                 loss = loss_criterion(predicted_latent_from_2d, latent_from_pointcloud)
 
             loss.backward()
@@ -118,7 +118,7 @@ def train(
             if iteration % config["validate_every_n"] == (
                 config["validate_every_n"] - 1
             ):
-                loss=ChamferLoss()
+                #loss=ChamferLoss()
                 # set model to eval, important if your network has e.g. dropout or batchnorm layers
                 model_image.eval()
 
@@ -135,9 +135,12 @@ def train(
                         std = torch.sqrt(torch.exp(log_var))
                         prediction = mu + torch.randn(std.size()) * std
 
-                    loss_total_val += loss(
+                    """loss_total_val += loss(
                         prediction, model_pointcloud(batch_val["point"])
-                    ).item()
+                    ).item()"""
+                    loss_,_=chamfer_distance(batch_val["point"].permute(0, 2, 1), prediction.permute(0, 2, 1))
+                    loss_total_val+=loss.detach().cpu()
+            
 
                 print(
                     f"[{epoch:03d}/{i:05d}] val_loss: {loss_total_val / len(val_dataloader):.3f}"
