@@ -16,13 +16,15 @@ def train(
 ):
 
     loss_criterion = None
+    best_distance=1e3
     if config["loss_criterion"] == "variational":
 
         # TODO: DiversityLoss TANIMLA !!!!!!!
 
         loss_div = DiversityLoss(config["alpha"], config["penalty_angle"])
         loss_latent_matching = nn.MSELoss()
-
+        loss_latent_matching=loss_latent_matching.to(device)
+        loss_div=loss_div.to(device)
         # TODO: Config Lambda tanimla!!
 
         optimizer = torch.optim.Adam(
@@ -49,7 +51,7 @@ def train(
             loss_criterion = nn.L1Loss()
         else:
             loss_criterion = nn.MSELoss()
-
+        loss_criterion=loss_criterion.to(device)
         optimizer = torch.optim.Adam(
             [
                 {
@@ -67,13 +69,13 @@ def train(
     model_image.train()
     model_pointcloud.eval()
 
-    train_loss_running = 0.0
+    train_loss_total = 0.0
 
     # best training loss for saving the model
     best_loss = float("inf")
 
     for epoch in range(config["max_epochs"]):
-
+        train_loss_epoch=0.
         for i, batch in enumerate(train_dataloader):
             # Move batch to device
             ShapeNet.move_batch_to_device(batch, device)
@@ -85,19 +87,17 @@ def train(
             std = torch.sqrt(torch.exp(log_var))
             predicted_latent_from_2d = mu + torch.randn(std.size()) * std
 
-            latent_from_pointcloud = model_pointcloud(batch["point"])
+            latent_from_pointcloud = model_pointcloud(batch["point"].permute(0,2,1))
 
             if config["loss_criterion"] == "variational":
-                loss_latent_matching=loss_latent_matching.to(device)
-                loss_div=loss_div.to(device)
-
+                
                 loss = loss_latent_matching(
                     predicted_latent_from_2d, latent_from_pointcloud
                 ) + config["lambda"] * loss_div(
                     config["penalty_angle"], predicted_latent_from_2d
                 )
             else:
-                loss_criterion=loss_criterion.to(device)
+                
                 loss = loss_criterion(predicted_latent_from_2d, latent_from_pointcloud)
 
             loss.backward()
@@ -105,71 +105,63 @@ def train(
             optimizer.step()
 
             # loss logging
-            train_loss_running += loss.item()
-            iteration = epoch * len(train_dataloader) + i
+            train_loss_total+=loss.item()
+            train_loss_epoch += loss.item()
+        print(
+            f'[{epoch:03d}/{i:05d}] train loss: {train_loss_epoch}'
+        )
+        
 
-            if iteration % config["print_every_n"] == (config["print_every_n"] - 1):
-                print(
-                    f'[{epoch:03d}/{i:05d}] train_loss: {train_loss_running / config["print_every_n"]:.3f}'
+        # validation evaluation and logging
+        if epoch % config["validate_every_n"] == 0:
+            #loss=ChamferLoss()
+            # set model to eval, important if your network has e.g. dropout or batchnorm layers
+            model_image.eval()
+
+            loss_total_val = 0.
+            # forward pass and evaluation for entire validation set
+            index=-1
+            for batch_val in val_dataloader:
+                ShapeNet.move_batch_to_device(batch_val, device)
+
+                with torch.no_grad():
+                    mu, log_var = model_image(batch_val["img"][12])
+                    index+=1
+                    # IMPLEMENT SAMPLING !!!!!!
+                    std = torch.sqrt(torch.exp(log_var))
+                    prediction = mu + torch.randn(std.size()) * std
+
+                    """loss_total_val += loss(
+                        prediction, model_pointcloud(batch_val["point"])
+                    ).item()"""
+                    latent_from_pointcloud = model_pointcloud(batch["point"].permute(0,2,1))
+
+                    if config["loss_criterion"] == "variational":
+                        
+                        loss_ = loss_latent_matching(
+                            prediction, latent_from_pointcloud
+                        ) + config["lambda"] * loss_div(
+                            config["penalty_angle"], prediction
+                        )
+                    else:
+                        loss_ = loss_criterion(prediction, latent_from_pointcloud)
+                    loss_total_val+= loss_.item()
+            print("Validation loss:",loss_total_val)
+
+            # TODO: calculate accuracy
+
+            distance = loss_total_val
+            if distance > best_distance:
+                torch.save(
+                    model_image.state_dict(),
+                    os.path.join(config["experiment_name"],"model_best_epoch_{}.pth".format(epoch)),
                 )
-                train_loss_running = 0.0
-
-            # validation evaluation and logging
-            if iteration % config["validate_every_n"] == (
-                config["validate_every_n"] - 1
-            ):
-                #loss=ChamferLoss()
-                # set model to eval, important if your network has e.g. dropout or batchnorm layers
-                model_image.eval()
-
-                loss_total_val = 0
-                total, correct = 0, 0
-                # forward pass and evaluation for entire validation set
-                index=-1
-                for batch_val in val_dataloader:
-                    ShapeNet.move_batch_to_device(batch_val, device)
-
-                    with torch.no_grad():
-                        mu, log_var = model_image(batch_val["img"][12])
-                        index+=1
-                        # IMPLEMENT SAMPLING !!!!!!
-                        std = torch.sqrt(torch.exp(log_var))
-                        prediction = mu + torch.randn(std.size()) * std
-
-                        """loss_total_val += loss(
-                            prediction, model_pointcloud(batch_val["point"])
-                        ).item()"""
-                        f_name = '/content/drive/MyDrive/3d-lmnet-pytorch/3d-lmnet-pytorch/2d_to_3d_generation_imgs/gt/' + str(index) + '.npy'
-                        with open(f_name, 'wb') as f:
-                            np.save(f, (batch_val["point"].cpu().numpy()))
-
-                        f_name_recons = '/content/drive/MyDrive/3d-lmnet-pytorch/3d-lmnet-pytorch/2d_to_3d_generation_imgs/pred/' + str(index) + '.npy'
-                        with open(f_name_recons, 'wb') as f:
-                            np.save(f, (prediction.permute(0, 2, 1).cpu().numpy()))
                 
-                        loss_,_=chamfer_distance(batch_val["point"], prediction.permute(0, 2, 1))
-                        loss_total_val+=loss.detach().cpu()
-            
+                best_distance = distance
 
-                print(
-                    f"[{epoch:03d}/{i:05d}] val_loss: {loss_total_val / len(val_dataloader):.3f}"
-                )
-
-                # TODO: calculate accuracy
-
-                distance = loss_total_val
-                print("Total chamfer distance:",distance)
-                if distance > best_distance:
-                    torch.save(
-                        model_image.state_dict(),
-                        os.path.join(config["experiment_name"],"model_best_epoch_{}.pth".format(epoch)),
-                    )
-                    
-                    best_distance = distance
-
-                # set model back to train
-                model_image.train()
-        if epoch>0 and epoch%100==0:
+            # set model back to train
+            model_image.train()
+        if epoch>0 and epoch%5==0:
           torch.save(
                 model_image.state_dict(),
                 os.path.join(config["experiment_name"],"model_epoch_{}.pth".format(epoch)),
@@ -232,16 +224,16 @@ def main(config):
     # Load model if resuming from checkpoint
     if config["resume_ckpt"] is not None:
         model_image.load_state_dict(
-            torch.load(config["resume_ckpt"] + "_model.ckpt", map_location="cpu")
+            torch.load(config["resume_ckpt"] + "_model.pth", map_location="cpu")
         )
 
     # Move model to specified device
-    model_image.to(device)
-    model_pointcloud.to(device)
+    model_image=model_image.to(device)
+    model_pointcloud=model_pointcloud.to(device)
     # Create folder for saving checkpoints
-    Path(f'3d-lmnet-pytorch/3d-lmnet-pytorch/runs/{config["experiment_name"]}').mkdir(
+    """Path(f'3d-lmnet-pytorch/3d-lmnet-pytorch/runs/{config["experiment_name"]}').mkdir(
         exist_ok=True, parents=True
-    )
+    )"""
 
     # Start training
     train(
