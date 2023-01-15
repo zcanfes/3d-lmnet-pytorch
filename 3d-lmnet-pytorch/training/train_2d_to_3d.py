@@ -1,5 +1,5 @@
 from pathlib import Path
-
+import numpy as np
 import torch
 import torch.nn as nn
 import pytorch3d
@@ -7,7 +7,7 @@ from model.model_2d import ImageEncoder
 from model.model_3d_autoencoder import Encoder
 from pytorch3d.loss import chamfer_distance
 from utils.losses import DiversityLoss, SquaredEuclideanError, LeastAbsoluteError
-
+import os
 from data.shapenet import ShapeNet
 
 
@@ -125,21 +125,30 @@ def train(
                 loss_total_val = 0
                 total, correct = 0, 0
                 # forward pass and evaluation for entire validation set
+                index=-1
                 for batch_val in val_dataloader:
                     ShapeNet.move_batch_to_device(batch_val, device)
 
                     with torch.no_grad():
                         mu, log_var = model_image(batch_val["img"][12])
-
+                        index+=1
                         # IMPLEMENT SAMPLING !!!!!!
                         std = torch.sqrt(torch.exp(log_var))
                         prediction = mu + torch.randn(std.size()) * std
 
-                    """loss_total_val += loss(
-                        prediction, model_pointcloud(batch_val["point"])
-                    ).item()"""
-                    loss_,_=chamfer_distance(batch_val["point"].permute(0, 2, 1), prediction.permute(0, 2, 1))
-                    loss_total_val+=loss.detach().cpu()
+                        """loss_total_val += loss(
+                            prediction, model_pointcloud(batch_val["point"])
+                        ).item()"""
+                        f_name = '/content/drive/MyDrive/3d-lmnet-pytorch/3d-lmnet-pytorch/2d_to_3d_generation_imgs/gt/' + str(index) + '.npy'
+                        with open(f_name, 'wb') as f:
+                            np.save(f, (batch_val["point"].cpu().numpy()))
+
+                        f_name_recons = '/content/drive/MyDrive/3d-lmnet-pytorch/3d-lmnet-pytorch/2d_to_3d_generation_imgs/pred/' + str(index) + '.npy'
+                        with open(f_name_recons, 'wb') as f:
+                            np.save(f, (prediction.permute(0, 2, 1).cpu().numpy()))
+                
+                        loss_,_=chamfer_distance(batch_val["point"], prediction.permute(0, 2, 1))
+                        loss_total_val+=loss.detach().cpu()
             
 
                 print(
@@ -148,18 +157,27 @@ def train(
 
                 # TODO: calculate accuracy
 
-                distace = loss_total_val
+                distance = loss_total_val
                 print("Total chamfer distance:",distance)
-                if distace > best_distance:
+                if distance > best_distance:
                     torch.save(
                         model_image.state_dict(),
-                        f'3d-lmnet-pytorch/3d-lmnet-pytorch/runs/{config["experiment_name"]}/model_best.ckpt',
+                        os.path.join(config["experiment_name"],"model_best_epoch_{}.pth".format(epoch)),
                     )
+                    
                     best_distance = distance
 
                 # set model back to train
                 model_image.train()
-
+        if epoch>0 and epoch%100==0:
+          torch.save(
+                model_image.state_dict(),
+                os.path.join(config["experiment_name"],"model_epoch_{}.pth".format(epoch)),
+            )
+    torch.save(
+        model_image.state_dict(),
+        os.path.join(config["experiment_name"],"model_final.pth"),
+    )
 
 def main(config):
     """
