@@ -7,21 +7,21 @@ class ImageEncoder(nn.Module):
         super().__init__()
         self.base = nn.Sequential(
             self.conv_block(32, 32, 3, stride=1),
-            nn.Conv2d(32, 64, 3, stride=2, padding="same"),
+            nn.Conv2d(32, 64, 3, stride=2),
             nn.ReLU(),
             self.conv_block(64, 64, 3, stride=1),
-            nn.Conv2d(64, 128, 3, stride=2, padding="same"),
+            nn.Conv2d(64, 128, 3, stride=2),
             nn.ReLU(),
             self.conv_block(128, 128, 3, stride=1),
-            nn.Conv2d(128, 256, 3, stride=2, padding="same"),
+            nn.Conv2d(128, 256, 3, stride=2),
             nn.ReLU(),
             self.conv_block(256, 256, 3, stride=1),
-            nn.Conv2d(256, 512, 3, stride=2, padding="same"),
+            nn.Conv2d(256, 512, 3, stride=2),
             nn.ReLU(),
             self.conv_block(512, 512, 3, stride=1),
-            nn.Conv2d(512, 512, 3, stride=1, padding="same"),
+            nn.Conv2d(512, 512, 3, stride=1,padding="same"),
             nn.ReLU(),
-            nn.Conv2d(512, 512, 5, stride=2, padding="same"),
+            nn.Conv2d(512, 512, 5, stride=2),
         )
 
         if final_layer == "variational":
