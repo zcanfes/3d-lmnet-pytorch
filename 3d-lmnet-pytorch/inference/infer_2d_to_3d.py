@@ -3,7 +3,8 @@ from pathlib import Path
 import numpy as np
 import torch
 import os
-
+import pytorch3d
+from pytorch3d.loss import chamfer_distance
 from data.shapenet import ShapeNet
 from model.model_2d import ImageEncoder
 from model.model_3d import PointCloudDecoder
@@ -38,8 +39,8 @@ class Inference2DToPointCloudVariational:
         self.decoder.to(self.device)
 
     def infer(self):
-        loss_criterion = ChamferLoss()
-        loss_criterion.to(self.device)
+        """loss_criterion = ChamferLoss()
+        loss_criterion.to(self.device)"""
 
         mu, log_var = self.encoder(self.input["img"][12])
         std = torch.sqrt(torch.exp(log_var))
@@ -64,18 +65,21 @@ class Inference2DToPointCloudVariational:
             os.makedirs(p)
 
         for i in range(len(pred_pointcloud)):
-            _, _, distance = loss_criterion(pred_pointcloud[i], self.input["point"]).item()
-            loss_value.append(
-                distance
-            )
+            with torch.no_grad():
+                loss,_=chamfer_distance(self.input["point"].permute(0, 2, 1), pred_pointcloud[i].permute(0, 2, 1))
+                
+                distance = loss.detach().cpu()
+                loss_value.append(
+                    distance
+                )
 
-            print("Chamfer loss value for prediction", i, ":", loss_value)
+            print("Chamfer loss value for prediction", i, ":", distance)
 
             print("Prediction:")
             visualize_pointcloud(pred_pointcloud[i])
 
             with open(p + str(self.pointcloud_filename) + ".npy", "wb") as f:
-                np.save(f, pred_pointcloud)
+                np.save(f, pred_pointcloud[i])
                 self.pointcloud_filename += 1
 
 
@@ -109,8 +113,8 @@ class Inference2DToPointCloudNormal:
     def infer(self):
 
         # TODO: CHAMFER LOSS SHOULD BE DEFINED !!!!!!!!!!!
-        loss_criterion = ChamferLoss()
-        loss_criterion.to(self.device)
+        """loss_criterion = ChamferLoss()
+        loss_criterion.to(self.device)"""
 
         pred_pointcloud = self.decoder(self.encoder(self.input["img"][12]))
         print("Groundtruth 2D image:")
@@ -118,9 +122,11 @@ class Inference2DToPointCloudNormal:
 
         print("Groundtruth pointcloud:")
         visualize_pointcloud(self.input["point"])
-        _, _, loss_value = loss_criterion(pred_pointcloud, self.input["point"]).item()
 
-        print("Chamfer loss value for prediction:", loss_value)
+        with torch.no_grad():
+            loss,_=chamfer_distance(self.input["point"].permute(0, 2, 1), pred_pointcloud.permute(0, 2, 1))
+                
+        print("Chamfer loss value for prediction:", loss.detach().cpu())
 
         print("Prediction pointcloud:")
         visualize_pointcloud(pred_pointcloud)
