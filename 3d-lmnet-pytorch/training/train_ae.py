@@ -11,7 +11,7 @@ from model.model_3d_autoencoder import AutoEncoder
 from pytorch3d.loss import chamfer_distance
 from data.shapenet import ShapeNet
 from utils.point_cloud import show_point_cloud
-
+from google.colab import files
 
 
 
@@ -134,10 +134,10 @@ def main(config):
                 optimizer.zero_grad()
 
                 point_clouds = data["point"]
-                if index==0:
-                  f_name = 'imgs/gt/' + str(index) + '.npy'
-                  with open(f_name, 'wb') as f:
-                      np.save(f, (point_clouds.cpu().numpy()))
+                
+                f_name = '/content/drive/MyDrive/3d-lmnet-pytorch/3d-lmnet-pytorch/imgs/gt/' + str(index) + '.npy'
+                with open(f_name, 'wb') as f:
+                    np.save(f, (point_clouds.cpu().numpy()))
 
                 # print("point_clouds shape:", point_clouds.shape)
                 point_clouds = point_clouds.permute(0, 2, 1)
@@ -150,7 +150,7 @@ def main(config):
                 recons = autoencoder(point_clouds)
                 #show_point_cloud(recons)
                 #recons = recons.cpu().numpy()
-                f_name_recons = 'imgs/pred/' + str(index) + '.npy'
+                f_name_recons = '/content/drive/MyDrive/3d-lmnet-pytorch/3d-lmnet-pytorch/imgs/pred/' + str(index) + '.npy'
                 with open(f_name_recons, 'wb') as f:
                     np.save(f, (recons.permute(0, 2, 1).cpu().numpy()))
                 #print(((recons.cpu().numpy())))
@@ -171,6 +171,7 @@ def main(config):
                 autoencoder.state_dict(),
                 os.path.join(config["log_dir"], "model_lowest_chamfer_loss.pth"),
             )
+            #files.download(os.path.join(config["log_dir"], "model_lowest_chamfer_loss.pth"))
 
         # save the model every 100 epochs
         if (epoch) % 100 == 0:
@@ -178,7 +179,7 @@ def main(config):
                 autoencoder.state_dict(),
                 os.path.join(config["log_dir"], "model_epoch_{}.pth".format(epoch)),
             )
-
+            #files.download(os.path.join(config["log_dir"], "model_epoch_{}.pth".format(epoch)))
         end = time.time()
         cost = end - start
 
@@ -196,3 +197,4 @@ def main(config):
           autoencoder.state_dict(),
           os.path.join(config["log_dir"], "model_autoencoder_final.pth"),
       )
+    #files.download(os.path.join(config["log_dir"], "model_autoencoder_final.pth"))
