@@ -82,7 +82,7 @@ def train(
 
             optimizer.zero_grad()
 
-            mu, log_var = model_image(batch["img"][12])
+            mu, log_var = model_image(batch["img"][12][:,:,:128,:128])
             # TODO: IMPLEMENT SAMPLING !!!!!!!
             std = torch.sqrt(torch.exp(log_var))
             predicted_latent_from_2d = mu + torch.randn(std.size()) * std
@@ -125,7 +125,7 @@ def train(
                 ShapeNet.move_batch_to_device(batch_val, device)
 
                 with torch.no_grad():
-                    mu, log_var = model_image(batch_val["img"][12])
+                    mu, log_var = model_image(batch_val["img"][12][:,:,:128,:128])
                     index+=1
                     # IMPLEMENT SAMPLING !!!!!!
                     std = torch.sqrt(torch.exp(log_var))
@@ -228,8 +228,8 @@ def main(config):
         )
 
     # Move model to specified device
-    model_image=model_image.to(device)
-    model_pointcloud=model_pointcloud.to(device)
+    model_image.to(device)
+    model_pointcloud.to(device)
     # Create folder for saving checkpoints
     """Path(f'3d-lmnet-pytorch/3d-lmnet-pytorch/runs/{config["experiment_name"]}').mkdir(
         exist_ok=True, parents=True
