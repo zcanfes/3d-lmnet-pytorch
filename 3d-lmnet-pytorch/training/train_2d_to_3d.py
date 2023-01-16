@@ -7,9 +7,10 @@ from model.model_3d_autoencoder import Encoder
 from utils.losses import DiversityLoss
 import os
 from data.shapenet import ShapeNet
+from model.model_3d_autoencoder import AutoEncoder
 
 
-def train(model_image, model_pointcloud, train_dataloader, val_dataloader, device, config):
+def train(model_image, autoencoder, train_dataloader, val_dataloader, device, config):
 
     loss_criterion = None
     best_distance = 1e3
@@ -25,8 +26,8 @@ def train(model_image, model_pointcloud, train_dataloader, val_dataloader, devic
         loss_div = DiversityLoss()
         loss_latent_matching = nn.MSELoss()
 
-        loss_latent_matching = loss_latent_matching.to(device)
-        loss_div = loss_div.to(device)
+        loss_latent_matching.to(device)
+        loss_div.to(device)
 
         optimizer = torch.optim.Adam(
             [
@@ -55,7 +56,7 @@ def train(model_image, model_pointcloud, train_dataloader, val_dataloader, devic
         else:
             loss_criterion = nn.MSELoss()
 
-        loss_criterion=loss_criterion.to(device)
+        loss_criterion.to(device)
         optimizer = torch.optim.Adam(
             [
                 {
@@ -71,7 +72,7 @@ def train(model_image, model_pointcloud, train_dataloader, val_dataloader, devic
             ]
         )
     model_image.train()
-    model_pointcloud.eval()
+    autoencoder.eval()
 
     train_loss_total = 0.0
 
@@ -83,29 +84,49 @@ def train(model_image, model_pointcloud, train_dataloader, val_dataloader, devic
         for i, batch in enumerate(train_dataloader):
             # Move batch to device
             ShapeNet.move_batch_to_device(batch, device)
-            # TODO: get azimuth angle
-            AZIMUTH_INPUT = batch["azimuth"]
-            optimizer.zero_grad()
+            point_clouds = batch["point"]
+            # print("point_clouds shape:", point_clouds.shape)
+            point_clouds = point_clouds.permute(0, 2, 1)
+            point_clouds=point_clouds.type(torch.cuda.FloatTensor)
+            latent_from_pointcloud = autoencoder.encoder(point_clouds)
+            print(batch["azimuth"].size())
+            for j in range(24):
+                
+                image=batch["img"][:,j,:,:,:]
+                print("hey")
+                image=image.type(torch.cuda.FloatTensor)
+                print("what is wrong")
+                # TODO: get azimuth angle
+                AZIMUTH_INPUT = batch["azimuth"][j]
+                #AZIMUTH_INPUT=AZIMUTH_INPUT.type(torch.cuda.FloatTensor)
+                optimizer.zero_grad()
+                
+                if config["final_layer"]=="variational":
+                    mu, log_var = model_image(image)
+                    std = torch.sqrt(torch.exp(log_var))
+                    predicted_latent_from_2d = (mu + torch.randn(std.size()) * std).cuda()
 
-            mu, log_var = model_image(batch["img"])
-            # TODO: IMPLEMENT SAMPLING !!!!!!!
-            std = torch.sqrt(torch.exp(log_var))
-            predicted_latent_from_2d = mu + torch.randn(std.size()) * std
+                    
+                else:
+                    predicted_latent_from_2d=model_image(image)
 
-            latent_from_pointcloud = model_pointcloud(batch["point"].permute(0,2,1))
-
-            if config["loss_criterion"] == "variational":
-                loss = loss_latent_matching(predicted_latent_from_2d, latent_from_pointcloud) + LAMBDA * loss_div(ALPHA, PENALTY_ANGLE, AZIMUTH_INPUT, predicted_latent_from_2d)
-            else:
-                loss = loss_criterion(predicted_latent_from_2d, latent_from_pointcloud)
-
-            loss.backward()
-
-            optimizer.step()
-
-            # loss logging
-            train_loss_total += loss.item()
-            train_loss_epoch += loss.item()
+                print("wh")
+                if config["loss_criterion"] == "variational":
+                    loss = loss_latent_matching(predicted_latent_from_2d, latent_from_pointcloud) + LAMBDA * loss_div(ALPHA, PENALTY_ANGLE, AZIMUTH_INPUT, predicted_latent_from_2d)
+                else:
+                    loss = loss_criterion(predicted_latent_from_2d, latent_from_pointcloud)
+                   
+                l=loss.item()
+                print(l)
+                loss.backward()
+                print("loss backward")
+                optimizer.step()
+                print("optimizer step")
+                # loss logging
+                
+                
+                train_loss_total += l
+                train_loss_epoch += l
 
         print(f'[{epoch:03d}/{i:05d}] train loss: {train_loss_epoch}')
         
@@ -118,28 +139,41 @@ def train(model_image, model_pointcloud, train_dataloader, val_dataloader, devic
 
             loss_total_val = 0.
             # forward pass and evaluation for entire validation set
-            index=-1
+            #index=-1
             for batch_val in val_dataloader:
                 ShapeNet.move_batch_to_device(batch_val, device)
 
                 with torch.no_grad():
-                    mu, log_var = model_image(batch_val["img"])
+                    point_clouds = batch_val["point"]
+                    # print("point_clouds shape:", point_clouds.shape)
+                    point_clouds = point_clouds.permute(0, 2, 1)
+                    point_clouds=point_clouds.type(torch.cuda.FloatTensor)
+                    latent_from_pointcloud = autoencoder.encoder(point_clouds)
                     index += 1
-                    # IMPLEMENT SAMPLING !!!!!!
-                    std = torch.sqrt(torch.exp(log_var))
-                    prediction = mu + torch.randn(std.size()) * std
+                    for j in range(24):
+                        image=batch_val["img"][:,j,:,:,:]
+                        image=image.type(torch.cuda.FloatTensor)
+                        AZIMUTH_INPUT = batch_val["azimuth"][j]
+                        AZIMUTH_INPUT=AZIMUTH_INPUT.type(torch.cuda.FloatTensor)
+                        
+                        if config["final_layer"]=="variational":
+                            mu, log_var = model_image(image)
+                            
+                            # IMPLEMENT SAMPLING !!!!!!
+                            std = torch.sqrt(torch.exp(log_var))
+                            predicted_latent_from_2d = mu + torch.randn(std.size()) * std
+                        else:
+                            predicted_latent_from_2d=model_image(image)
+                        """loss_total_val += loss(
+                            prediction, model_pointcloud(batch_val["point"])
+                        ).item()"""
+                        
+                        if config["loss_criterion"] == "variational":
+                            loss_ = loss = loss_latent_matching(predicted_latent_from_2d, latent_from_pointcloud) + LAMBDA * loss_div(ALPHA, PENALTY_ANGLE, AZIMUTH_INPUT, predicted_latent_from_2d)
+                        else:
+                            loss_ = loss_criterion(predicted_latent_from_2d, latent_from_pointcloud)
 
-                    """loss_total_val += loss(
-                        prediction, model_pointcloud(batch_val["point"])
-                    ).item()"""
-                    latent_from_pointcloud = model_pointcloud(batch["point"].permute(0,2,1))
-
-                    if config["loss_criterion"] == "variational":
-                        loss_ = loss = loss_latent_matching(predicted_latent_from_2d, latent_from_pointcloud) + LAMBDA * loss_div(ALPHA, PENALTY_ANGLE, AZIMUTH_INPUT, predicted_latent_from_2d)
-                    else:
-                        loss_ = loss_criterion(prediction, latent_from_pointcloud)
-
-                    loss_total_val += loss_.item()
+                        loss_total_val += loss_.item()
 
             print("Validation loss:",loss_total_val)
 
@@ -196,7 +230,7 @@ def main(config):
         print("Using CPU")
 
     # create dataloaders
-    train_dataset = ShapeNet("train")
+    train_dataset = ShapeNet("train",config["cat"])
     train_dataloader = torch.utils.data.DataLoader(
         train_dataset,
         batch_size=config["batch_size"],
@@ -205,7 +239,7 @@ def main(config):
         pin_memory=True,  # This is an implementation detail to speed up data uploading to the GPU
     )
 
-    val_dataset = ShapeNet("valid")
+    val_dataset = ShapeNet("valid",config["cat"])
     val_dataloader = torch.utils.data.DataLoader(
         val_dataset, batch_size=config["batch_size"], shuffle=False, num_workers=2
     )
@@ -214,9 +248,10 @@ def main(config):
     model_image = ImageEncoder(config["final_layer"], config["bottleneck"])
 
     # upload learned weights !!!!!!!!!
-    model_pointcloud = Encoder.load_state_dict(
-        torch.load(config["3d_encoder_path"], map_location="cpu")
-    )
+    autoencoder=AutoEncoder(config["autoencoder_bottleneck"],config["autoencoder_hidden_size"],config["autoencoder_output_size"])
+    
+    autoencoder.load_state_dict(torch.load(config["3d_encoder_path"], map_location="cpu"))
+    
 
     # Load model if resuming from checkpoint
     if config["resume_ckpt"] is not None:
@@ -226,7 +261,7 @@ def main(config):
 
     # Move model to specified device
     model_image.to(device)
-    model_pointcloud.to(device)
+    autoencoder.to(device)
     # Create folder for saving checkpoints
     """Path(f'3d-lmnet-pytorch/3d-lmnet-pytorch/runs/{config["experiment_name"]}').mkdir(
         exist_ok=True, parents=True
@@ -235,7 +270,7 @@ def main(config):
     # Start training
     train(
         model_image,
-        model_pointcloud,
+        autoencoder,
         train_dataloader,
         val_dataloader,
         device,
