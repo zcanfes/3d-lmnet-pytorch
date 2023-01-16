@@ -96,6 +96,6 @@ class ShapeNet(torch.utils.data.Dataset):
                 
                 np_res.append(image)
                 np_azimuth.append((np.pi / 180.)*meta[i][0])
-        return np.array(np_res),np.array(np_azimuth)
+        return np.transpose(np.array(np_res),(0,3,1,2)),np.array(np_azimuth)
 
     
