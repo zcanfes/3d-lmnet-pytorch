@@ -2,127 +2,119 @@ import random
 from pathlib import Path
 import numpy as np
 import torch
+import torch.nn as nn
 import os
-
+import pytorch3d
+from pytorch3d.loss import chamfer_distance
+from data.shapenet import ShapeNet
 from model.model_3d_autoencoder import Encoder, Decoder
-from utils.visualization import visualize_pointcloud, visualize_image
-from utils.losses import ChamferLoss
+#from model.model_3d import PointCloudDecoder
+#from utils.visualization import visualize_pointcloud, visualize_image
+#from utils.losses import ChamferLoss
+from utils.losses import DiversityLoss
+import os
+from data.shapenet import ShapeNet
 
+def test(encoder, decoder, test_dataloader, device, config):
+    if config["loss_criterion"] == "variational":
 
-class Inference3DToPointCloudVariational:
-    def __init__(self, inp, encoder_path, decoder_path, config, device):
-        encoder = Encoder()
-        self.encoder = encoder.load_state_dict(
-            torch.load(encoder_path, map_location="cpu")
+        # TODO: DiversityLoss TANIMLA !!!!!!!
+
+        loss_div = DiversityLoss(config["alpha"], config["penalty_angle"])
+        loss_latent_matching = nn.MSELoss()
+        loss_latent_matching=loss_latent_matching.to(device)
+        loss_div=loss_div.to(device)
+
+    else:
+        if config["loss_criterion"] == "L1":
+            loss_criterion = nn.L1Loss()
+        else:
+            loss_criterion = nn.MSELoss()
+        loss_criterion=loss_criterion.to(device)
+
+    encoder.eval()
+    decoder.eval()
+
+    total_test_loss=0.
+    index=-1
+    for i, batch in enumerate(test_dataloader):
+        # Move batch to device
+        print("Batch",i)
+        index+=1
+        
+        with torch.no_grad():
+            ShapeNet.move_batch_to_device(batch, device)
+            with open(config["3d_inference_gt_point"] + str(index)+ ".npy", "wb") as f:
+                np.save(f, batch["point"].permute(0, 2, 1))
+            with open(config["3d_inference_gt_img"] + str(index)+ ".npy", "wb") as f:
+                np.save(f, batch["img"])
+            
+            if config["loss_criterion"] == "variational":
+                
+                mu, log_var = encoder(batch["img"][12][:,:,:128,:128])
+                std = torch.sqrt(torch.exp(log_var))
+                pred_latent = mu + torch.randn(std.size()) * std
+                pred_pointcloud = decoder(pred_latent)
+                batch_min=1e3
+                for j in range(len(pred_pointcloud)):
+                    loss,_=chamfer_distance(batch["point"].permute(0, 2, 1), pred_pointcloud[j].permute(0, 2, 1))
+                    
+                    distance = loss.detach().cpu()
+                    if distance<batch_min:
+                        batch_min=distance
+                    
+                    print("Chamfer distance for prediciton",j,":",distance)
+                    with open(config["3d_inference_variational"] + str(index)+"_"+str(j) + ".npy", "wb") as f:
+                        np.save(f, pred_pointcloud[i])
+
+                total_test_loss+=batch_min
+            else:
+                pred_pointcloud = decoder(encoder(batch["img"][12][:,:,:128,:128]))
+                loss,_=chamfer_distance(batch["point"].permute(0, 2, 1), pred_pointcloud.permute(0, 2, 1))
+                distance = loss.detach().cpu()
+                print("Chamfer distance for batch",i,":",distance)
+                with open(config["3d_inference_normal"] + str(index) + ".npy", "wb") as f:
+                    np.save(f, pred_pointcloud)
+
+                total_test_loss+=distance
+
+                print("Chamfer loss value for prediction:", distance)
+    print("Total test chamfer distance:", total_test_loss)
+
+def main(config):
+    device = torch.device("cpu")
+    if torch.cuda.is_available() and config["device"].startswith("cuda"):
+        device = torch.device(config["device"])
+        print("Using device:", config["device"])
+    else:
+        print("Using CPU")
+
+    test_dataset = ShapeNet("test")
+    test_dataloader = torch.utils.data.DataLoader(
+        test_dataset, batch_size=config["batch_size"], shuffle=False, num_workers=2
+    )
+
+    encoder = Encoder()
+    encoder = encoder.load_state_dict(
+        torch.load(config["encoder_path"], map_location="cpu")
+    )
+    decoder = Decoder(
+        config["input_size"],
+        config["hidden_size"],
+        config["output_size"],
         )
-        decoder = Decoder(
-            config["input_size"],
-            config["hidden_size"],
-            config["output_size"],
-        )
-        self.decoder = decoder.load_state_dict(
-            torch.load(decoder_path, map_location="cpu")
-        )
-        self.input = inp
-        self.device = device
-        self.encoder.eval()
-        self.encoder.eval()
-        self.encoder.to(self.device)
-        self.decoder.to(self.device)
+    decoder = decoder.load_state_dict(
+        torch.load(config["decoder_path"], map_location="cpu")
+    )
+    
+    
+    encoder.to(device)
+    decoder.to(device)
 
-    def infer(self):
-        loss_criterion = ChamferLoss()
-        loss_criterion.to(self.device)
-
-        mu, log_var = self.encoder(self.input["img"][12])
-        std = torch.sqrt(torch.exp(log_var))
-        pred_latent = mu + torch.randn(std.size()) * std
-        pred_pointcloud = self.decoder(pred_latent)
-
-        loss_value = []
-        print("Groundtruth 3D image:")
-        visualize_image(self.input["img"])
-
-        print("Groundtruth point cloud:")
-        visualize_pointcloud(self.input["point"])
-
-        p = (
-            "./generated_variatioal_pointclouds_from3d_image/"
-            + str(self.pointcloud_filename)
-            + "/"
-        )
-        isExist = os.path.exists(p)
-        if not isExist:
-
-            os.makedirs(p)
-
-        for i in range(len(pred_pointcloud)):
-            _, _, distance = loss_criterion(pred_pointcloud[i], self.input["point"]).item()
-            loss_value.append(
-                distance
-            )
-
-            print("Chamfer loss value for prediction", i, ":", loss_value)
-
-            print("Prediction:")
-            visualize_pointcloud(pred_pointcloud[i])
-
-            with open(p + str(self.pointcloud_filename) + ".npy", "wb") as f:
-                np.save(f, pred_pointcloud)
-                self.pointcloud_filename += 1
-
-
-class Inference3DToPointCloudNormal:
-    def __init__(self, inp, encoder_path, decoder_path, config, device):
-        encoder = Encoder()
-        self.encoder = encoder.load_state_dict(
-            torch.load(encoder_path, map_location="cpu")
-        )
-        decoder = Decoder(
-            config["input_size"],
-            config["hidden_size"],
-            config["output_size"],
-        )
-        self.decoder = decoder.load_state_dict(
-            torch.load(decoder_path, map_location="cpu")
-        )
-        self.input = inp
-        self.device = device
-        self.encoder.eval()
-        self.encoder.eval()
-        self.encoder.to(self.device)
-        self.decoder.to(self.device)
-        self.pointcloud_filename = 0
-
-    def infer(self):
-
-        # TODO: CHAMFER LOSS SHOULD BE DEFINED !!!!!!!!!!!
-        loss_criterion = ChamferLoss()
-        loss_criterion.to(self.device)
-
-        pred_pointcloud = self.decoder(self.encoder(self.input["img"][12]))
-        print("Groundtruth 3D image:")
-        visualize_image(self.input["img"])
-
-        print("Groundtruth pointcloud:")
-        visualize_pointcloud(self.input["point"])
-        _, _, loss_value = loss_criterion(pred_pointcloud, self.input["point"]).item()
-
-        print("Chamfer loss value for prediction:", loss_value)
-
-        print("Prediction pointcloud:")
-        visualize_pointcloud(pred_pointcloud)
-
-        p = (
-            "./generated_pointcloud_from3d_image/"
-            + str(self.pointcloud_filename)
-            + "/"
-        )
-        isExist = os.path.exists(p)
-        if not isExist:
-
-            os.makedirs(p)
-
-        with open(p + str(self.pointcloud_filename) + ".npy", "wb") as f:
-            np.save(f, pred_pointcloud)
-            self.pointcloud_filename += 1
+    test(
+        encoder,
+        decoder,
+        test_dataloader,
+        device,
+        config,
+    )
