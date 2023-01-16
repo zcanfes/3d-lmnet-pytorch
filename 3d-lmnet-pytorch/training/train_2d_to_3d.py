@@ -20,8 +20,7 @@ def train(model_image, model_pointcloud, train_dataloader, val_dataloader, devic
         PENALTY_ANGLE = config["penalty_angle"]
         LAMBDA = config["lambda"]
 
-        # TODO: get azimuth angle
-        AZIMUTH_INPUT = ...
+        
 
         loss_div = DiversityLoss()
         loss_latent_matching = nn.MSELoss()
@@ -84,10 +83,11 @@ def train(model_image, model_pointcloud, train_dataloader, val_dataloader, devic
         for i, batch in enumerate(train_dataloader):
             # Move batch to device
             ShapeNet.move_batch_to_device(batch, device)
-
+            # TODO: get azimuth angle
+            AZIMUTH_INPUT = batch["azimuth"]
             optimizer.zero_grad()
 
-            mu, log_var = model_image(batch["img"][12][:,:,:128,:128])
+            mu, log_var = model_image(batch["img"])
             # TODO: IMPLEMENT SAMPLING !!!!!!!
             std = torch.sqrt(torch.exp(log_var))
             predicted_latent_from_2d = mu + torch.randn(std.size()) * std
@@ -123,7 +123,7 @@ def train(model_image, model_pointcloud, train_dataloader, val_dataloader, devic
                 ShapeNet.move_batch_to_device(batch_val, device)
 
                 with torch.no_grad():
-                    mu, log_var = model_image(batch_val["img"][12][:,:,:128,:128])
+                    mu, log_var = model_image(batch_val["img"])
                     index += 1
                     # IMPLEMENT SAMPLING !!!!!!
                     std = torch.sqrt(torch.exp(log_var))
