@@ -12,10 +12,11 @@ class ShapeNet(torch.utils.data.Dataset):
     img_path = Path("/content/3d-lmnet-pytorch/3d-lmnet-pytorch/data/ShapeNetRendering")
     point_path = Path("/content/3d-lmnet-pytorch/3d-lmnet-pytorch/data/ShapeNet_pointclouds")
 
-    class_name_mapping = json.loads(
+    num_to_class_mapping = json.loads(
         Path("/content/3d-lmnet-pytorch/3d-lmnet-pytorch/data/shape_info.json").read_text()
     )  # mapping for ShapeNet ids -> names
-    classes = sorted(class_name_mapping.keys())
+    class_to_nums_mapping=json.loads(Path("/content/3d-lmnet-pytorch/3d-lmnet-pytorch/data/class_to_nums.json").read_text())
+    class_nums = sorted(num_to_class_mapping.keys())
 
     def __init__(self, split, cat=13):
         super().__init__()
@@ -52,10 +53,10 @@ class ShapeNet(torch.utils.data.Dataset):
         img_index = self.img_items[index]
         point_index = self.point_items[index]
 
-        img = ShapeNet.get_img_numpy(img_index)
+        img,azimuth = ShapeNet.get_img_and_azimuth(img_index)
         point = ShapeNet.get_point_numpy(point_index)
 
-        return {"img": img, "point": point}
+        return {"img": img, "point": point,"azimuth":azimuth}
 
     def __len__(self):
         return len(self.point_items)
@@ -65,6 +66,7 @@ class ShapeNet(torch.utils.data.Dataset):
         # TODO add code to move batch to device
         batch["img"] = batch["img"].to(device)
         batch["point"] = batch["point"].to(device)
+        batch["azimuth"]=batch["azimuth"].to(device)
 
     @staticmethod
     def get_point_numpy(shapenet_id):
@@ -75,13 +77,25 @@ class ShapeNet(torch.utils.data.Dataset):
         return convertedArray
 
     @staticmethod
-    def get_img_numpy(shapenet_id):
+    def get_img_and_azimuth(shapenet_id):
         np_res = []
+        np_azimuth=[]
+        meta_file=str(ShapeNet.img_path / shapenet_id / "rendering" / "rendering_metadata.txt")
+        
+        meta=np.loadtxt(meta_file)
         for _, _, files in os.walk(ShapeNet.img_path / shapenet_id):
-            for f in files:
-                if f[-3:] == "png":
-                    p = str(ShapeNet.img_path / shapenet_id / "rendering" / f)
-                    image = np.transpose(np.array(cv2.imread(p)), (1, 2, 0))
-                    np_res.append(image)
+            png_files=[int(f[:-4]) for f in files if f[-3:] == "png"]
+            
+            png_files.sort()
+            for i,f in enumerate(png_files):
+                file_name=str(f).rjust(2, "0")+".png"
+                p = str(ShapeNet.img_path / shapenet_id / "rendering" / file_name)
 
-        return np.array(np_res)
+                image = cv2.imread(p)[4:-5, 4:-5, :3]
+                image = np.array(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+                
+                np_res.append(image)
+                np_azimuth.append((np.pi / 180.)*meta[i][0])
+        return np.array(np_res),np.array(np_azimuth)
+
+    
