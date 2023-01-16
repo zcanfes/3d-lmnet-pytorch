@@ -63,6 +63,7 @@ def main(config):
 
     # model
     autoencoder = AutoEncoder(config["bottleneck"],config["hidden_size"],config["output_size"])
+    #autoencoder.load_state_dict(torch.load(config["autoencoder"]))
     autoencoder.to(device)
 
     # loss function
