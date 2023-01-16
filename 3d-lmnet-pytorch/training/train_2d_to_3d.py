@@ -90,14 +90,8 @@ def train(
             latent_from_pointcloud = model_pointcloud(batch["point"].permute(0,2,1))
 
             if config["loss_criterion"] == "variational":
-                
-                loss = loss_latent_matching(
-                    predicted_latent_from_2d, latent_from_pointcloud
-                ) + config["lambda"] * loss_div(
-                    config["penalty_angle"], predicted_latent_from_2d
-                )
+                loss = loss_latent_matching(predicted_latent_from_2d, latent_from_pointcloud) + config["lambda"] * loss_div(config["penalty_angle"], predicted_latent_from_2d)
             else:
-                
                 loss = loss_criterion(predicted_latent_from_2d, latent_from_pointcloud)
 
             loss.backward()
@@ -105,11 +99,10 @@ def train(
             optimizer.step()
 
             # loss logging
-            train_loss_total+=loss.item()
+            train_loss_total += loss.item()
             train_loss_epoch += loss.item()
-        print(
-            f'[{epoch:03d}/{i:05d}] train loss: {train_loss_epoch}'
-        )
+
+        print(f'[{epoch:03d}/{i:05d}] train loss: {train_loss_epoch}')
         
 
         # validation evaluation and logging
@@ -161,11 +154,13 @@ def train(
 
             # set model back to train
             model_image.train()
+
         if epoch>0 and epoch%5==0:
           torch.save(
                 model_image.state_dict(),
                 os.path.join(config["experiment_name"],"model_epoch_{}.pth".format(epoch)),
             )
+            
     torch.save(
         model_image.state_dict(),
         os.path.join(config["experiment_name"],"model_final.pth"),
