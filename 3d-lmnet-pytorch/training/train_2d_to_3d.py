@@ -2,30 +2,32 @@ from pathlib import Path
 import numpy as np
 import torch
 import torch.nn as nn
-import pytorch3d
 from model.model_2d import ImageEncoder
 from model.model_3d_autoencoder import Encoder
-from pytorch3d.loss import chamfer_distance
-from utils.losses import DiversityLoss, SquaredEuclideanError, LeastAbsoluteError
+from utils.losses import DiversityLoss
 import os
 from data.shapenet import ShapeNet
 
 
-def train(
-    model_image, model_pointcloud, train_dataloader, val_dataloader, device, config
-):
+def train(model_image, model_pointcloud, train_dataloader, val_dataloader, device, config):
 
     loss_criterion = None
-    best_distance=1e3
+    best_distance = 1e3
+
     if config["loss_criterion"] == "variational":
 
-        # TODO: DiversityLoss TANIMLA !!!!!!!
+        ALPHA = config["alpha"]
+        PENALTY_ANGLE = config["penalty_angle"]
+        LAMBDA = config["lambda"]
 
-        loss_div = DiversityLoss(config["alpha"], config["penalty_angle"])
+        # TODO: get azimuth angle
+        AZIMUTH_INPUT = ...
+
+        loss_div = DiversityLoss()
         loss_latent_matching = nn.MSELoss()
-        loss_latent_matching=loss_latent_matching.to(device)
-        loss_div=loss_div.to(device)
-        # TODO: Config Lambda tanimla!!
+
+        loss_latent_matching = loss_latent_matching.to(device)
+        loss_div = loss_div.to(device)
 
         optimizer = torch.optim.Adam(
             [
@@ -46,11 +48,14 @@ def train(
                 },
             ]
         )
+
     else:
+
         if config["loss_criterion"] == "L1":
             loss_criterion = nn.L1Loss()
         else:
             loss_criterion = nn.MSELoss()
+
         loss_criterion=loss_criterion.to(device)
         optimizer = torch.optim.Adam(
             [
@@ -90,7 +95,7 @@ def train(
             latent_from_pointcloud = model_pointcloud(batch["point"].permute(0,2,1))
 
             if config["loss_criterion"] == "variational":
-                loss = loss_latent_matching(predicted_latent_from_2d, latent_from_pointcloud) + config["lambda"] * loss_div(config["penalty_angle"], predicted_latent_from_2d)
+                loss = loss_latent_matching(predicted_latent_from_2d, latent_from_pointcloud) + LAMBDA * loss_div(ALPHA, PENALTY_ANGLE, AZIMUTH_INPUT, predicted_latent_from_2d)
             else:
                 loss = loss_criterion(predicted_latent_from_2d, latent_from_pointcloud)
 
@@ -119,7 +124,7 @@ def train(
 
                 with torch.no_grad():
                     mu, log_var = model_image(batch_val["img"][12][:,:,:128,:128])
-                    index+=1
+                    index += 1
                     # IMPLEMENT SAMPLING !!!!!!
                     std = torch.sqrt(torch.exp(log_var))
                     prediction = mu + torch.randn(std.size()) * std
@@ -130,15 +135,12 @@ def train(
                     latent_from_pointcloud = model_pointcloud(batch["point"].permute(0,2,1))
 
                     if config["loss_criterion"] == "variational":
-                        
-                        loss_ = loss_latent_matching(
-                            prediction, latent_from_pointcloud
-                        ) + config["lambda"] * loss_div(
-                            config["penalty_angle"], prediction
-                        )
+                        loss_ = loss = loss_latent_matching(predicted_latent_from_2d, latent_from_pointcloud) + LAMBDA * loss_div(ALPHA, PENALTY_ANGLE, AZIMUTH_INPUT, predicted_latent_from_2d)
                     else:
                         loss_ = loss_criterion(prediction, latent_from_pointcloud)
-                    loss_total_val+= loss_.item()
+
+                    loss_total_val += loss_.item()
+
             print("Validation loss:",loss_total_val)
 
             # TODO: calculate accuracy
@@ -160,7 +162,7 @@ def train(
                 model_image.state_dict(),
                 os.path.join(config["experiment_name"],"model_epoch_{}.pth".format(epoch)),
             )
-            
+
     torch.save(
         model_image.state_dict(),
         os.path.join(config["experiment_name"],"model_final.pth"),

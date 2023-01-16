@@ -3,20 +3,17 @@ import torch.nn as nn
 import numpy as np
 
 
-class DiversityLoss:
-    def __init__(self, alpha, penalty_angle):
-        self.alpha = alpha
-        self.penalty_angle = penalty_angle
+class DiversityLoss():
 
-    def __call__(self, azimuth_input, z_sigma):
-        z_alpha = self.get_alpha(azimuth_input)
+    def __call__(self, alpha, penalty_angle, azimuth_input, z_sigma):
+        z_alpha = self.get_alpha(alpha, penalty_angle, azimuth_input)
         L_reg = torch.mean((torch.mean(z_sigma, dim=-1) - z_alpha) ** 2)
         return L_reg
 
-    def get_alpha(self, azimuth):
-        penalty_angle = np.pi / 180.0 * self.penalty_angle
+    def get_alpha(self, alpha, penalty_angle, azimuth):
+        penalty_angle = np.pi / 180.0 * penalty_angle
 
-        return self.alpha * np.exp(-((azimuth - np.pi) ** 2 / (penalty_angle**2)))
+        return alpha * np.exp(-((azimuth - np.pi) ** 2 / (penalty_angle**2)))
 
 
 
