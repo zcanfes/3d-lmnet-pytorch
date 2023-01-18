@@ -10,7 +10,7 @@ from data.shapenet import ShapeNet
 from model.model_3d_autoencoder import AutoEncoder
 
 
-def train(model_image, autoencoder, train_dataloader, val_dataloader, device, config):
+def train(model_image, autoencoder, train_dataloader, val_dataloader, device, config,len_train_dataset,_len_val_dataset):
 
     loss_criterion = None
     best_distance = 1e3
@@ -75,6 +75,7 @@ def train(model_image, autoencoder, train_dataloader, val_dataloader, device, co
     autoencoder.eval()
 
     train_loss_total = 0.0
+    batches = int(len_train_dataset / config["batch_size"])
 
     # best training loss for saving the model
     best_loss = float("inf")
@@ -119,7 +120,17 @@ def train(model_image, autoencoder, train_dataloader, val_dataloader, device, co
             optimizer.step()
             # loss logging
             
-            
+            if (i + 1) % 100 == 0:
+                print(
+                    "Epoch {}/{} with iteration {}/{}: CD loss is {}.".format(
+                        epoch,
+                        config["max_epochs"],
+                        i + 1,
+                        batches,
+                        l
+                        #loss.item() # / len(point_clouds),
+                    )
+                )
             train_loss_total += l
             train_loss_epoch += l
 
@@ -169,7 +180,7 @@ def train(model_image, autoencoder, train_dataloader, val_dataloader, device, co
 
                     loss_total_val += loss_.item()
 
-            print("Validation loss:",loss_total_val)
+            print("Validation loss:",loss_total_val/len_val_dataset)
 
             # TODO: calculate accuracy
 
@@ -190,11 +201,13 @@ def train(model_image, autoencoder, train_dataloader, val_dataloader, device, co
                 model_image.state_dict(),
                 os.path.join(config["experiment_name"],"model_epoch_{}.pth".format(epoch)),
             )
+    print("Total training loss:",train_loss_total/len_train_dataset)
 
     torch.save(
         model_image.state_dict(),
         os.path.join(config["experiment_name"],"model_final.pth"),
     )
+
 
 def main(config):
     """
@@ -225,6 +238,7 @@ def main(config):
 
     # create dataloaders
     train_dataset = ShapeNet("train",config["cat"],image_model=True)
+
     train_dataloader = torch.utils.data.DataLoader(
         train_dataset,
         batch_size=config["batch_size"],
@@ -269,4 +283,6 @@ def main(config):
         val_dataloader,
         device,
         config,
+        len(train_dataset),
+        len(val_dataset)
     )
