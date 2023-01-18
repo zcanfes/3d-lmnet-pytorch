@@ -16,7 +16,7 @@ import os
 from data.shapenet import ShapeNet
 
 def test(encoder, autoencoder, test_dataloader, device, config,len_test_dataset):
-    if config["loss_criterion"] == "variational":
+    """if config["loss_criterion"] == "variational":
 
         # TODO: DiversityLoss TANIMLA !!!!!!!
 
@@ -30,7 +30,7 @@ def test(encoder, autoencoder, test_dataloader, device, config,len_test_dataset)
             loss_criterion = nn.L1Loss()
         else:
             loss_criterion = nn.MSELoss()
-        loss_criterion.to(device)
+        loss_criterion.to(device)"""
 
     encoder.eval()
     autoencoder.eval()
@@ -67,7 +67,7 @@ def test(encoder, autoencoder, test_dataloader, device, config,len_test_dataset)
 
                 total_test_loss+=distance
             else:
-                pred_pointcloud = autoencoder.decoder(encoder(batch["img"])
+                pred_pointcloud = autoencoder.decoder(encoder(batch["img"]))
                 loss,_=chamfer_distance(batch["point"].permute(0, 2, 1), pred_pointcloud.permute(0, 2, 1))
                 distance = loss.detach().cpu()
                 print("Chamfer distance for test input",i,":",distance)
