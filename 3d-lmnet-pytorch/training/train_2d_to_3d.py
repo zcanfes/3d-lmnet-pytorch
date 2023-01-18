@@ -10,7 +10,7 @@ from data.shapenet import ShapeNet
 from model.model_3d_autoencoder import AutoEncoder
 
 
-def train(model_image, autoencoder, train_dataloader, val_dataloader, device, config,len_train_dataset,_len_val_dataset):
+def train(model_image, autoencoder, train_dataloader, val_dataloader, device, config,len_train_dataset,len_val_dataset):
 
     loss_criterion = None
     best_distance = 1e3
@@ -138,7 +138,7 @@ def train(model_image, autoencoder, train_dataloader, val_dataloader, device, co
         
 
         # validation evaluation and logging
-        if epoch % config["validate_every_n"] == 0:
+        if epoch % config["validate_every_n"] == 0 and epoch>0:
             #loss=ChamferLoss()
             # set model to eval, important if your network has e.g. dropout or batchnorm layers
             model_image.eval()
