@@ -1,120 +1,80 @@
-import random
-from pathlib import Path
-import numpy as np
-import torch
-import torch.nn as nn
+import argparse
 import os
+import time
+
+import torch
 import pytorch3d
+import torch.optim as optim
+import numpy as np
+from model.model_3d_autoencoder import AutoEncoder
+#from utils.losses import ChamferLoss
 from pytorch3d.loss import chamfer_distance
 from data.shapenet import ShapeNet
-from model.model_3d_autoencoder import Encoder, Decoder
-#from model.model_3d import PointCloudDecoder
-#from utils.visualization import visualize_pointcloud, visualize_image
-#from utils.losses import ChamferLoss
-from utils.losses import DiversityLoss
-import os
-from data.shapenet import ShapeNet
+from google.colab import files
 
-def test(encoder, decoder, test_dataloader, device, config):
-    if config["loss_criterion"] == "variational":
-
-        # TODO: DiversityLoss TANIMLA !!!!!!!
-
-        loss_div = DiversityLoss(config["alpha"], config["penalty_angle"])
-        loss_latent_matching = nn.MSELoss()
-        loss_latent_matching=loss_latent_matching.to(device)
-        loss_div=loss_div.to(device)
-
-    else:
-        if config["loss_criterion"] == "L1":
-            loss_criterion = nn.L1Loss()
-        else:
-            loss_criterion = nn.MSELoss()
-        loss_criterion=loss_criterion.to(device)
-
-    encoder.eval()
-    decoder.eval()
-
-    total_test_loss=0.
-    index=-1
-    for i, batch in enumerate(test_dataloader):
-        # Move batch to device
-        print("Batch",i)
-        index+=1
-        
-        with torch.no_grad():
-            ShapeNet.move_batch_to_device(batch, device)
-            with open(config["3d_inference_gt_point"] + str(index)+ ".npy", "wb") as f:
-                np.save(f, batch["point"].permute(0, 2, 1))
-            with open(config["3d_inference_gt_img"] + str(index)+ ".npy", "wb") as f:
-                np.save(f, batch["img"])
-            
-            if config["loss_criterion"] == "variational":
-                
-                mu, log_var = encoder(batch["img"][12][:,:,:128,:128])
-                std = torch.sqrt(torch.exp(log_var))
-                pred_latent = mu + torch.randn(std.size()) * std
-                pred_pointcloud = decoder(pred_latent)
-                batch_min=1e3
-                for j in range(len(pred_pointcloud)):
-                    loss,_=chamfer_distance(batch["point"].permute(0, 2, 1), pred_pointcloud[j].permute(0, 2, 1))
-                    
-                    distance = loss.detach().cpu()
-                    if distance<batch_min:
-                        batch_min=distance
-                    
-                    print("Chamfer distance for prediciton",j,":",distance)
-                    with open(config["3d_inference_variational"] + str(index)+"_"+str(j) + ".npy", "wb") as f:
-                        np.save(f, pred_pointcloud[i])
-
-                total_test_loss+=batch_min
-            else:
-                pred_pointcloud = decoder(encoder(batch["img"][12][:,:,:128,:128]))
-                loss,_=chamfer_distance(batch["point"].permute(0, 2, 1), pred_pointcloud.permute(0, 2, 1))
-                distance = loss.detach().cpu()
-                print("Chamfer distance for batch",i,":",distance)
-                with open(config["3d_inference_normal"] + str(index) + ".npy", "wb") as f:
-                    np.save(f, pred_pointcloud)
-
-                total_test_loss+=distance
-
-                print("Chamfer loss value for prediction:", distance)
-    print("Total test chamfer distance:", total_test_loss)
 
 def main(config):
-    device = torch.device("cpu")
-    if torch.cuda.is_available() and config["device"].startswith("cuda"):
-        device = torch.device(config["device"])
-        print("Using device:", config["device"])
-    else:
-        print("Using CPU")
-
     test_dataset = ShapeNet("test")
     test_dataloader = torch.utils.data.DataLoader(
-        test_dataset, batch_size=config["batch_size"], shuffle=False, num_workers=2
+        test_dataset,
+        batch_size=config["batch_size"],
+        shuffle=True,  # Shuffling the order of samples is useful during training to prevent that the network learns to depend on the order of the input data
+        num_workers=config["num_workers"],
+        pin_memory=True,  # This is an implementation detail to speed up data uploading to the GPU
+        drop_last=True
     )
 
-    encoder = Encoder()
-    encoder = encoder.load_state_dict(
-        torch.load(config["encoder_path"], map_location="cpu")
-    )
-    decoder = Decoder(
-        config["input_size"],
-        config["hidden_size"],
-        config["output_size"],
-        )
-    decoder = decoder.load_state_dict(
-        torch.load(config["decoder_path"], map_location="cpu")
-    )
-    
-    
-    encoder.to(device)
-    decoder.to(device)
 
-    test(
-        encoder,
-        decoder,
-        test_dataloader,
-        device,
-        config,
-    )
+    # device
+    device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+
+    # model
+    autoencoder = AutoEncoder(config["bottleneck"],config["hidden_size"],config["output_size"])
+    autoencoder.load_state_dict(torch.load(config["autoencoder"]))
+    autoencoder.to(device)
+
+
+    # min_chamfer_loss = 1e3
+    # best_epoch = -1
+    autoencoder.eval()
+    print("\033[31mBegin Training...\033[0m")
+    # training
+    start = time.time()
+    total_loss = 0
+    index = -1
+    #print(next(iter(train_dataloader)))
+    print("Batch size is " + str(config["batch_size"]))
+    for i, data in enumerate(test_dataloader):
+        index+= 1
+        with torch.no_grad():
+            ShapeNet.move_batch_to_device(data, device)
+            point_clouds = data["point"]
+            # print("point_clouds shape:", point_clouds.shape)
+            point_clouds = point_clouds.permute(0, 2, 1)
+            point_clouds=point_clouds.type(torch.cuda.FloatTensor)
+            #point_clouds = point_clouds.to(device)
+            f_name_pcs = '/content/drive/MyDrive/3d-lmnet-pytorch/3d-lmnet-pytorch/ae_infer_results_3d/gt/' + str(index) + '.npy'
+            with open(f_name_pcs, 'wb') as f:
+                np.save(f, (point_clouds.permute(0, 2, 1).cpu().numpy()))
+                
+            recons = autoencoder(point_clouds)
+            f_name_recons = '/content/drive/MyDrive/3d-lmnet-pytorch/3d-lmnet-pytorch/ae_infer_results_3d/pred/' + str(index) + '.npy'
+            with open(f_name_recons, 'wb') as f:
+                np.save(f, (recons.permute(0, 2, 1).cpu().numpy()))
+
+            loss,_=chamfer_distance(point_clouds.permute(0, 2, 1), recons.permute(0, 2, 1))
+            loss_detach = loss.detach().cpu()
+            total_loss += loss_detach
+
+            
+            # print("loss value:", loss, " || loss shape: ", loss.shape)
+
+            print(
+                    "{}. Input, CD loss is {}.".format(
+                        i + 1,
+                    
+                        loss_detach
+                        )
+                )
+        
+    print("Total loss is: {}".format(total_loss/len(test_dataset)))
