@@ -96,7 +96,7 @@ def train(model_image, autoencoder, train_dataloader, val_dataloader, device, co
             image=image.type(torch.cuda.FloatTensor)
             
             # TODO: get azimuth angle
-            AZIMUTH_INPUT = batch["azimuth"][0]
+            AZIMUTH_INPUT = batch["azimuth"]
             #AZIMUTH_INPUT=AZIMUTH_INPUT.type(torch.cuda.FloatTensor)
             optimizer.zero_grad()
             
@@ -147,7 +147,7 @@ def train(model_image, autoencoder, train_dataloader, val_dataloader, device, co
                     index += 1
                     image=batch_val["img"]
                     image=image.type(torch.cuda.FloatTensor)
-                    AZIMUTH_INPUT = batch_val["azimuth"][0]
+                    AZIMUTH_INPUT = batch_val["azimuth"]
                     AZIMUTH_INPUT=AZIMUTH_INPUT.type(torch.cuda.FloatTensor)
                     
                     if config["final_layer"]=="variational":
