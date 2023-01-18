@@ -22,18 +22,18 @@ def test(encoder, decoder, test_dataloader, device, config):
 
         loss_div = DiversityLoss(config["alpha"], config["penalty_angle"])
         loss_latent_matching = nn.MSELoss()
-        loss_latent_matching=loss_latent_matching.to(device)
-        loss_div=loss_div.to(device)
+        loss_latent_matching.to(device)
+        loss_div.to(device)
 
     else:
         if config["loss_criterion"] == "L1":
             loss_criterion = nn.L1Loss()
         else:
             loss_criterion = nn.MSELoss()
-        loss_criterion=loss_criterion.to(device)
+        loss_criterion.to(device)
 
     encoder.eval()
-    decoder.eval()
+    autoencoder.eval()
 
     total_test_loss=0.
     index=-1
@@ -54,7 +54,7 @@ def test(encoder, decoder, test_dataloader, device, config):
                 mu, log_var = encoder(batch["img"][12][:,:,:128,:128])
                 std = torch.sqrt(torch.exp(log_var))
                 pred_latent = mu + torch.randn(std.size()) * std
-                pred_pointcloud = decoder(pred_latent)
+                pred_pointcloud = autoencoder.decoder(pred_latent)
                 batch_min=1e3
                 for j in range(len(pred_pointcloud)):
                     loss,_=chamfer_distance(batch["point"].permute(0, 2, 1), pred_pointcloud[j].permute(0, 2, 1))
@@ -98,27 +98,18 @@ def main(config):
     encoder = encoder.load_state_dict(
         torch.load(config["encoder_path"], map_location="cpu")
     )
-    decoder = PointCloudDecoder(
-        config["input_size"],
-        config["hidden_size"],
-        config["output_size"],
-        config["bnorm"],
-        config["bnorm_final"],
-        config["regularizer"],
-        config["weight_decay"],
-        config["dropout_prob"],
-    )
-    decoder = decoder.load_state_dict(
-        torch.load(config["decoder_path"], map_location="cpu")
-    )
+    autoencoder=AutoEncoder(config["autoencoder_bottleneck"],config["autoencoder_hidden_size"],config["autoencoder_output_size"])
+    
+    autoencoder.load_state_dict(torch.load(config["3d_autoencoder_path"], map_location="cpu"))
+    
     
     
     encoder.to(device)
-    decoder.to(device)
+    autoencoder.to(device)
 
     test(
         encoder,
-        decoder,
+        autoencoder,
         test_dataloader,
         device,
         config,
