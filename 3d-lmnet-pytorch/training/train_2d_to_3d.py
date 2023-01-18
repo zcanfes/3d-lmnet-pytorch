@@ -89,44 +89,39 @@ def train(model_image, autoencoder, train_dataloader, val_dataloader, device, co
             point_clouds = point_clouds.permute(0, 2, 1)
             point_clouds=point_clouds.type(torch.cuda.FloatTensor)
             latent_from_pointcloud = autoencoder.encoder(point_clouds)
-            print(batch["azimuth"].size())
-            for j in range(24):
+            
+            
                 
-                image=batch["img"][:,j,:,:,:]
-                print("hey")
-                image=image.type(torch.cuda.FloatTensor)
-                print("what is wrong")
-                # TODO: get azimuth angle
-                AZIMUTH_INPUT = batch["azimuth"][j]
-                #AZIMUTH_INPUT=AZIMUTH_INPUT.type(torch.cuda.FloatTensor)
-                optimizer.zero_grad()
-                
-                if config["final_layer"]=="variational":
-                    mu, log_var = model_image(image)
-                    std = torch.sqrt(torch.exp(log_var))
-                    predicted_latent_from_2d = (mu + torch.randn(std.size()) * std).cuda()
+            image=batch["img"]
+            image=image.type(torch.cuda.FloatTensor)
+            
+            # TODO: get azimuth angle
+            AZIMUTH_INPUT = batch["azimuth"][0]
+            #AZIMUTH_INPUT=AZIMUTH_INPUT.type(torch.cuda.FloatTensor)
+            optimizer.zero_grad()
+            
+            if config["final_layer"]=="variational":
+                mu, log_var = model_image(image)
+                std = torch.sqrt(torch.exp(log_var))
+                predicted_latent_from_2d = (mu + torch.randn(std.size()) * std).cuda()
 
-                    
-                else:
-                    predicted_latent_from_2d=model_image(image)
+                
+            else:
+                predicted_latent_from_2d=model_image(image)
 
-                print("wh")
-                if config["loss_criterion"] == "variational":
-                    loss = loss_latent_matching(predicted_latent_from_2d, latent_from_pointcloud) + LAMBDA * loss_div(ALPHA, PENALTY_ANGLE, AZIMUTH_INPUT, predicted_latent_from_2d)
-                else:
-                    loss = loss_criterion(predicted_latent_from_2d, latent_from_pointcloud)
-                   
-                l=loss.item()
-                print(l)
-                loss.backward()
-                print("loss backward")
-                optimizer.step()
-                print("optimizer step")
-                # loss logging
-                
-                
-                train_loss_total += l
-                train_loss_epoch += l
+            if config["loss_criterion"] == "variational":
+                loss = loss_latent_matching(predicted_latent_from_2d, latent_from_pointcloud) + LAMBDA * loss_div(ALPHA, PENALTY_ANGLE, AZIMUTH_INPUT, predicted_latent_from_2d)
+            else:
+                loss = loss_criterion(predicted_latent_from_2d, latent_from_pointcloud)
+               
+            l=loss.item()
+            loss.backward()
+            optimizer.step()
+            # loss logging
+            
+            
+            train_loss_total += l
+            train_loss_epoch += l
 
         print(f'[{epoch:03d}/{i:05d}] train loss: {train_loss_epoch}')
         
@@ -150,30 +145,29 @@ def train(model_image, autoencoder, train_dataloader, val_dataloader, device, co
                     point_clouds=point_clouds.type(torch.cuda.FloatTensor)
                     latent_from_pointcloud = autoencoder.encoder(point_clouds)
                     index += 1
-                    for j in range(24):
-                        image=batch_val["img"][:,j,:,:,:]
-                        image=image.type(torch.cuda.FloatTensor)
-                        AZIMUTH_INPUT = batch_val["azimuth"][j]
-                        AZIMUTH_INPUT=AZIMUTH_INPUT.type(torch.cuda.FloatTensor)
+                    image=batch_val["img"]
+                    image=image.type(torch.cuda.FloatTensor)
+                    AZIMUTH_INPUT = batch_val["azimuth"][0]
+                    AZIMUTH_INPUT=AZIMUTH_INPUT.type(torch.cuda.FloatTensor)
+                    
+                    if config["final_layer"]=="variational":
+                        mu, log_var = model_image(image)
                         
-                        if config["final_layer"]=="variational":
-                            mu, log_var = model_image(image)
-                            
-                            # IMPLEMENT SAMPLING !!!!!!
-                            std = torch.sqrt(torch.exp(log_var))
-                            predicted_latent_from_2d = mu + torch.randn(std.size()) * std
-                        else:
-                            predicted_latent_from_2d=model_image(image)
-                        """loss_total_val += loss(
-                            prediction, model_pointcloud(batch_val["point"])
-                        ).item()"""
-                        
-                        if config["loss_criterion"] == "variational":
-                            loss_ = loss = loss_latent_matching(predicted_latent_from_2d, latent_from_pointcloud) + LAMBDA * loss_div(ALPHA, PENALTY_ANGLE, AZIMUTH_INPUT, predicted_latent_from_2d)
-                        else:
-                            loss_ = loss_criterion(predicted_latent_from_2d, latent_from_pointcloud)
+                        # IMPLEMENT SAMPLING !!!!!!
+                        std = torch.sqrt(torch.exp(log_var))
+                        predicted_latent_from_2d = mu + torch.randn(std.size()) * std
+                    else:
+                        predicted_latent_from_2d=model_image(image)
+                    """loss_total_val += loss(
+                        prediction, model_pointcloud(batch_val["point"])
+                    ).item()"""
+                    
+                    if config["loss_criterion"] == "variational":
+                        loss_ = loss = loss_latent_matching(predicted_latent_from_2d, latent_from_pointcloud) + LAMBDA * loss_div(ALPHA, PENALTY_ANGLE, AZIMUTH_INPUT, predicted_latent_from_2d)
+                    else:
+                        loss_ = loss_criterion(predicted_latent_from_2d, latent_from_pointcloud)
 
-                        loss_total_val += loss_.item()
+                    loss_total_val += loss_.item()
 
             print("Validation loss:",loss_total_val)
 
@@ -230,7 +224,7 @@ def main(config):
         print("Using CPU")
 
     # create dataloaders
-    train_dataset = ShapeNet("train",config["cat"])
+    train_dataset = ShapeNet("train",config["cat"],image_model=True)
     train_dataloader = torch.utils.data.DataLoader(
         train_dataset,
         batch_size=config["batch_size"],
@@ -239,7 +233,7 @@ def main(config):
         pin_memory=True,  # This is an implementation detail to speed up data uploading to the GPU
     )
 
-    val_dataset = ShapeNet("valid",config["cat"])
+    val_dataset = ShapeNet("valid",config["cat"],image_model=True)
     val_dataloader = torch.utils.data.DataLoader(
         val_dataset, batch_size=config["batch_size"], shuffle=False, num_workers=2
     )
