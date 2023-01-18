@@ -8,7 +8,7 @@ import pytorch3d
 from pytorch3d.loss import chamfer_distance
 from data.shapenet import ShapeNet
 from model.model_2d import ImageEncoder
-from model.model_3d import PointCloudDecoder
+from model.model_3d_autoencoder import AutoEncoder
 from utils.visualization import visualize_pointcloud, visualize_image
 from utils.losses import ChamferLoss
 from utils.losses import DiversityLoss, SquaredEuclideanError, LeastAbsoluteError
