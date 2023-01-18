@@ -104,7 +104,7 @@ class Decoder(nn.Module):
         if self.bnorm_final:
             x = self.bn3(x)
         # print("tensor size after decoder " + str(x.size())+ "\n")
-        x = x.x = x.view(-1,3,2048) # This should be same with the input point cloud shape and be compatible with conv layer
+        x = x.view(-1,3,2048) # This should be same with the input point cloud shape and be compatible with conv layer
         #print("tensor size after decoder " + str(x.size())+ "\n")
         return x
 
