@@ -15,7 +15,7 @@ from utils.losses import DiversityLoss, SquaredEuclideanError, LeastAbsoluteErro
 import os
 from data.shapenet import ShapeNet
 
-def test(encoder, decoder, test_dataloader, device, config):
+def test(encoder, autoencoder, test_dataloader, device, config):
     if config["loss_criterion"] == "variational":
 
         # TODO: DiversityLoss TANIMLA !!!!!!!
