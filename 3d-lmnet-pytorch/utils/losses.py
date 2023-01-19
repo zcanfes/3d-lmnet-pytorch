@@ -3,7 +3,7 @@ import torch.nn as nn
 import numpy as np
 
 
-class DiversityLoss():
+class DiversityLoss(nn.Module):
 
     def __call__(self, alpha, penalty_angle, azimuth_input, z_sigma):
         z_alpha = self.get_alpha(alpha, penalty_angle, azimuth_input)
