@@ -75,12 +75,14 @@ def train(model_image, autoencoder, train_dataloader, val_dataloader, device, co
     autoencoder.eval()
 
     train_loss_total = 0.0
+    val_loss_total=0.
+    count_val=0
     batches = int(len_train_dataset / config["batch_size"])
 
     # best training loss for saving the model
     best_loss = float("inf")
 
-    for epoch in range(config["max_epochs"]):
+    for epoch in range(1,config["max_epochs"]+1):
         train_loss_epoch=0.
         for i, batch in enumerate(train_dataloader):
             # Move batch to device
@@ -142,8 +144,8 @@ def train(model_image, autoencoder, train_dataloader, val_dataloader, device, co
             #loss=ChamferLoss()
             # set model to eval, important if your network has e.g. dropout or batchnorm layers
             model_image.eval()
-
-            loss_total_val = 0.
+            count_val+=1
+            loss_val = 0.
             # forward pass and evaluation for entire validation set
             #index=-1
             for batch_val in val_dataloader:
@@ -178,13 +180,13 @@ def train(model_image, autoencoder, train_dataloader, val_dataloader, device, co
                     else:
                         loss_ = loss_criterion(predicted_latent_from_2d, latent_from_pointcloud)
 
-                    loss_total_val += loss_.item()
-
-            print("Validation loss:",loss_total_val/len_val_dataset)
+                    loss_val += loss_.item()
+                    val_loss_total+=loss_.item()
+            print("Validation loss:",loss_val/len_val_dataset)
 
             # TODO: calculate accuracy
 
-            distance = loss_total_val
+            distance = loss_val
             if distance > best_distance:
                 torch.save(
                     model_image.state_dict(),
@@ -196,12 +198,13 @@ def train(model_image, autoencoder, train_dataloader, val_dataloader, device, co
             # set model back to train
             model_image.train()
 
-        if epoch>0 and epoch%5==0:
+        if epoch%config["save_every_n"]==0:
           torch.save(
                 model_image.state_dict(),
                 os.path.join(config["experiment_name"],"model_epoch_{}.pth".format(epoch)),
             )
     print("Total training loss:",train_loss_total/len_train_dataset)
+    print("Total validation loss:",val_loss_total/(count_val*len_train_dataset))
 
     torch.save(
         model_image.state_dict(),
