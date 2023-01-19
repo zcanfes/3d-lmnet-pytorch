@@ -7,7 +7,6 @@ import pytorch3d
 import torch.optim as optim
 import numpy as np
 from model.model_3d_autoencoder import AutoEncoder
-#from utils.losses import ChamferLoss
 from pytorch3d.loss import chamfer_distance
 from data.shapenet import ShapeNet
 from google.colab import files

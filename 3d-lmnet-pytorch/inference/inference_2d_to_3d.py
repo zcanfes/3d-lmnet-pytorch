@@ -10,8 +10,7 @@ from data.shapenet import ShapeNet
 from model.model_2d import ImageEncoder
 from model.model_3d_autoencoder import AutoEncoder
 from utils.visualization import visualize_pointcloud, visualize_image
-from utils.losses import ChamferLoss
-from utils.losses import DiversityLoss, SquaredEuclideanError, LeastAbsoluteError
+from utils.losses import DiversityLoss
 import os
 from data.shapenet import ShapeNet
 
