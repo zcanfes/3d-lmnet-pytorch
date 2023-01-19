@@ -1,3 +1,4 @@
+    "penalty_angle":20,
 from pathlib import Path
 import numpy as np
 import torch
@@ -102,23 +103,34 @@ def train(model_image, autoencoder, train_dataloader, val_dataloader, device, co
             AZIMUTH_INPUT = batch["azimuth"]
             #AZIMUTH_INPUT=AZIMUTH_INPUT.type(torch.cuda.FloatTensor)
             optimizer.zero_grad()
-            
+            #print("there")
             if config["final_layer"]=="variational":
                 mu, log_var = model_image(image)
+                # mu = mu.to(device_local)
+                # log_var = log_var.to(device_local)
                 std = torch.sqrt(torch.exp(log_var))
-                predicted_latent_from_2d = (mu + torch.randn(std.size()) * std).cuda()
+                # std = std.to(device_local)
+                # print(type(std))
+                # print(type(mu))
+                # print(type(torch.randn(std.size())))
+                rand = torch.randn(std.size(),  device=device)
+                predicted_latent_from_2d = (mu + rand * std).cuda()
 
-                
+            
             else:
                 predicted_latent_from_2d=model_image(image)
-
+           
             if config["loss_criterion"] == "variational":
+                #print("before loss")
                 loss = loss_latent_matching(predicted_latent_from_2d, latent_from_pointcloud) + LAMBDA * loss_div(ALPHA, PENALTY_ANGLE, AZIMUTH_INPUT, predicted_latent_from_2d)
+                #print("here")
             else:
                 loss = loss_criterion(predicted_latent_from_2d, latent_from_pointcloud)
-               
+            
             l=loss.item()
+            #print("before backward")
             loss.backward()
+            #print("after backward")
             optimizer.step()
             # loss logging
             
@@ -169,7 +181,9 @@ def train(model_image, autoencoder, train_dataloader, val_dataloader, device, co
                         
                         # IMPLEMENT SAMPLING !!!!!!
                         std = torch.sqrt(torch.exp(log_var))
-                        predicted_latent_from_2d = mu + torch.randn(std.size()) * std
+                        rand = torch.randn(std.size(),  device=device)
+                        predicted_latent_from_2d = (mu + rand * std).cuda()
+                        
                     else:
                         predicted_latent_from_2d=model_image(image)
                     """loss_total_val += loss(
