@@ -142,12 +142,13 @@ def train(model_image, autoencoder, train_dataloader, val_dataloader, device, co
         # validation evaluation and logging
         if epoch % config["validate_every_n"] == 0 and epoch>0:
             #loss=ChamferLoss()
+            print("Validations starts...")
             # set model to eval, important if your network has e.g. dropout or batchnorm layers
             model_image.eval()
             count_val+=1
             loss_val = 0.
             # forward pass and evaluation for entire validation set
-            #index=-1
+            
             for batch_val in val_dataloader:
                 ShapeNet.move_batch_to_device(batch_val, device)
 
@@ -157,7 +158,7 @@ def train(model_image, autoencoder, train_dataloader, val_dataloader, device, co
                     point_clouds = point_clouds.permute(0, 2, 1)
                     point_clouds=point_clouds.type(torch.cuda.FloatTensor)
                     latent_from_pointcloud = autoencoder.encoder(point_clouds)
-                    index += 1
+                    optimizer.zero_grad()
                     image=batch_val["img"]
                     image=image.type(torch.cuda.FloatTensor)
                     AZIMUTH_INPUT = batch_val["azimuth"]
@@ -267,7 +268,7 @@ def main(config):
     # Load model if resuming from checkpoint
     if config["resume_ckpt"] is not None:
         model_image.load_state_dict(
-            torch.load(config["resume_ckpt"] + "_model.pth", map_location="cpu")
+            torch.load(config["resume_ckpt"], map_location="cpu")
         )
 
     # Move model to specified device
