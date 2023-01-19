@@ -203,7 +203,7 @@ def train(model_image, autoencoder, train_dataloader, val_dataloader, device, co
                 model_image.state_dict(),
                 os.path.join(config["experiment_name"],"model_epoch_{}.pth".format(epoch)),
             )
-    print("Total training loss:",train_loss_total/((config["max_epoch"]+1)*len_train_dataset))
+    print("Total training loss:",train_loss_total/(config["max_epoch"]*len_train_dataset)
     print("Total validation loss:",val_loss_total/(count_val*len_train_dataset))
 
     torch.save(
