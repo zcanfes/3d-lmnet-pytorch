@@ -1,4 +1,3 @@
-    "penalty_angle":20,
 from pathlib import Path
 import numpy as np
 import torch
@@ -191,12 +190,12 @@ def train(model_image, autoencoder, train_dataloader, val_dataloader, device, co
                     ).item()"""
                     
                     if config["loss_criterion"] == "variational":
-                        loss_ = loss = loss_latent_matching(predicted_latent_from_2d, latent_from_pointcloud) + LAMBDA * loss_div(ALPHA, PENALTY_ANGLE, AZIMUTH_INPUT, predicted_latent_from_2d)
+                        loss = loss_latent_matching(predicted_latent_from_2d, latent_from_pointcloud) + LAMBDA * loss_div(ALPHA, PENALTY_ANGLE, AZIMUTH_INPUT, predicted_latent_from_2d)
                     else:
-                        loss_ = loss_criterion(predicted_latent_from_2d, latent_from_pointcloud)
+                        loss = loss_criterion(predicted_latent_from_2d, latent_from_pointcloud)
 
-                    loss_val += loss_.item()
-                    val_loss_total+=loss_.item()
+                    loss_val += loss.item()
+                    val_loss_total+=loss.item()
             print("Validation loss:",loss_val/len_val_dataset)
 
             # TODO: calculate accuracy
