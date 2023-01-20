@@ -85,7 +85,7 @@ def main(config):
     else:
         print("Using CPU")
 
-    test_dataset = ShapeNet("test")
+    test_dataset = ShapeNet("test",config["cat"],image_model=True)
     test_dataloader = torch.utils.data.DataLoader(
         test_dataset, batch_size=config["batch_size"], shuffle=False, num_workers=2
     )
