@@ -16,14 +16,11 @@ from data.shapenet import ShapeNet
 
 def test(encoder, autoencoder, test_dataloader, device, config,len_test_dataset):
     """if config["loss_criterion"] == "variational":
-
         # TODO: DiversityLoss TANIMLA !!!!!!!
-
         loss_div = DiversityLoss(config["alpha"], config["penalty_angle"])
         loss_latent_matching = nn.MSELoss()
         loss_latent_matching.to(device)
         loss_div.to(device)
-
     else:
         if config["loss_criterion"] == "L1":
             loss_criterion = nn.L1Loss()
@@ -62,18 +59,18 @@ def test(encoder, autoencoder, test_dataloader, device, config,len_test_dataset)
                 
                 mu, log_var = encoder(image)
                 std = torch.sqrt(torch.exp(log_var))
-                pred_latent = mu + torch.randn(std.size()) * std
-                pred_pointcloud = autoencoder.decoder(pred_latent)
                 
-                for j in range(len(pred_pointcloud)):
-                    loss,_=chamfer_distance(point_clouds, pred_pointcloud[j])
+                pred_latent = mu + torch.randn((3,512),device=device) * std
+                pred_pointcloud = autoencoder.decoder(pred_latent) 
+                for j in range(3):
+                    loss,_=chamfer_distance(point_clouds, pred_pointcloud[j,None,:,:])
                     
                     distance = loss.detach().cpu()
                     
                     
                     print("Chamfer distance for test data:",i," the",j,"th prediciton is :",distance)
                     with open(config["2d_inference_variational"] + "inference_"+str(index)+"_"+str(j) + ".npy", "wb") as f:
-                        np.save(f, pred_pointcloud[j].cpu().numpy())
+                        np.save(f, pred_pointcloud[j,None,:,:].cpu().numpy())
 
                 total_test_loss+=distance
             else:
@@ -127,4 +124,3 @@ def main(config):
         config,
         len_test_dataset
     )
-
