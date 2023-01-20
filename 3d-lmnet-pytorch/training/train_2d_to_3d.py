@@ -147,8 +147,8 @@ def train(model_image, autoencoder, train_dataloader, val_dataloader, device, co
             train_loss_total += l
             train_loss_epoch += l
 
-        #print(f'[{epoch:03d}/{i:05d}] train loss: {train_loss_epoch/len_train_dataset}')
-        print(f'[{epoch:03d}/{i:05d}] train loss: {train_loss_epoch/len_train_dataset}',"Total train loss so far:",train_loss_total/(epoch*len_train_dataset))
+        #print(f'[{epoch:03d}/{i:05d}] train loss: {train_loss_epoch/len(train_dataloader)}')
+        print(f'[{epoch:03d}/{i:05d}] train loss: {train_loss_epoch/len(train_dataloader)}',"Total train loss so far:",train_loss_total/(epoch*len(train_dataloader)))
 
         # validation evaluation and logging
         if epoch % config["validate_every_n"] == 0 and epoch>0:
@@ -196,8 +196,8 @@ def train(model_image, autoencoder, train_dataloader, val_dataloader, device, co
 
                     loss_val += loss.item()
                     val_loss_total+=loss.item()
-            #print("Validation loss:",loss_val/len_val_dataset)
-            print("Validation loss:",loss_val/len_val_dataset,"Total validation loss so far:",val_loss_total/(count_val*len_val_dataset))
+            #print("Validation loss:",loss_val/len(val_dataloader))
+            print("Validation loss:",loss_val/len(val_dataloader),"Total validation loss so far:",val_loss_total/(count_val*len(val_dataloader)))
 
             # TODO: calculate accuracy
 
@@ -218,8 +218,8 @@ def train(model_image, autoencoder, train_dataloader, val_dataloader, device, co
                 model_image.state_dict(),
                 os.path.join(config["experiment_name"],"model_epoch_{}.pth".format(epoch)),
             )
-    print("Total training loss:",train_loss_total/(config["max_epochs"]*len_train_dataset))
-    print("Total validation loss:",val_loss_total/(count_val*len_train_dataset))
+    print("Total training loss:",train_loss_total/(config["max_epochs"]*len(train_dataloader)))
+    print("Total validation loss:",val_loss_total/(count_val*len(val_dataloader)))
 
     torch.save(
         model_image.state_dict(),
