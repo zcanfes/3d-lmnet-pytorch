@@ -37,7 +37,7 @@ def test(encoder, autoencoder, test_dataloader, device, config,len_test_dataset)
     total_test_loss=0.
     index=-1
     for i, batch in enumerate(test_dataloader):
-        if i==200:
+        if i==50:
             break
         index+=1
         
