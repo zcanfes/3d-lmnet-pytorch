@@ -22,6 +22,7 @@ class ImageEncoder(nn.Module):
             nn.Conv2d(512, 512, 3, stride=1,padding="same"),
             nn.ReLU(),
             nn.Conv2d(512, 512, 5, stride=2),
+            nn.ReLU()
         )
         self.final_layer=final_layer
         self.mu=None
