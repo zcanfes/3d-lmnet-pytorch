@@ -135,7 +135,7 @@ def train(model_image, autoencoder, train_dataloader, val_dataloader, device, co
             
             if (i + 1) % 100 == 0:
                 print(
-                    "Epoch {}/{} with iteration {}/{}: CD loss is {}.".format(
+                    "Epoch {}/{} with iteration {}/{}:  Loss is {}.".format(
                         epoch,
                         config["max_epochs"],
                         i + 1,
