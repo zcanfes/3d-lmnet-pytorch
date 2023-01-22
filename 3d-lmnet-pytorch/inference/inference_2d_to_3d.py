@@ -33,9 +33,9 @@ def test(encoder, autoencoder, test_dataloader, device, config,len_test_dataset)
 
     total_test_loss=0.
     index=-1
-    end_test=50
+    end_input=50
     for i, batch in enumerate(test_dataloader):
-        if i==end_test:
+        if i==end_input:
             break
         index+=1
         
@@ -89,7 +89,7 @@ def test(encoder, autoencoder, test_dataloader, device, config,len_test_dataset)
 
                 total_test_loss+=distance
 
-    print("Total test chamfer distance:", total_test_loss/end_test)
+    print("Total test chamfer distance:", total_test_loss/end_input)
 
 def main(config):
     device = torch.device("cpu")
