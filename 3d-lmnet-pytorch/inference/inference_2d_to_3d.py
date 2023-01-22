@@ -33,8 +33,9 @@ def test(encoder, autoencoder, test_dataloader, device, config,len_test_dataset)
 
     total_test_loss=0.
     index=-1
+    end_test=50
     for i, batch in enumerate(test_dataloader):
-        if i==50:
+        if i==end_test:
             break
         index+=1
         
@@ -88,7 +89,7 @@ def test(encoder, autoencoder, test_dataloader, device, config,len_test_dataset)
 
                 total_test_loss+=distance
 
-    print("Total test chamfer distance:", total_test_loss/len(test_dataloader))
+    print("Total test chamfer distance:", total_test_loss/end_test)
 
 def main(config):
     device = torch.device("cpu")
@@ -100,7 +101,7 @@ def main(config):
 
     test_dataset = ShapeNet("test",config["cat"],image_model=True)
     test_dataloader = torch.utils.data.DataLoader(
-        test_dataset, batch_size=config["batch_size"], shuffle=False, num_workers=2
+        test_dataset, batch_size=config["batch_size"], shuffle=True, num_workers=2
     )
     len_test_dataset=len(test_dataset)
     encoder = ImageEncoder(config["final_layer"], config["bottleneck"])
