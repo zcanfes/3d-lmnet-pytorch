@@ -25,15 +25,11 @@ class ImageEncoder(nn.Module):
             nn.ReLU()
         )
         self.final_layer=final_layer
-        self.mu=None
-        self.std=None
-        self.latent=None
+        self.mu,self.std,self.latent=None,None,None
         if self.final_layer == "variational":
             self.mu = nn.Linear(512*4, bottleneck)
             self.std = nn.Linear(512*4, bottleneck)
-
         else:
-            
             self.latent = nn.Linear(512*4, bottleneck)
 
     def conv_block(self, in_channels, out_channels, kernel_size, stride):
