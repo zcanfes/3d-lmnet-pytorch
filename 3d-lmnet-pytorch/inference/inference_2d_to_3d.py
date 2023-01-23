@@ -98,7 +98,7 @@ def test(encoder, autoencoder, test_dataloader, device, config,len_test_dataset)
 
                 total_test_loss+=distance
 
-    print("Total test chamfer distance:", total_test_loss/len(test_dataloader)
+    print("Total test chamfer distance:", total_test_loss/len(test_dataloader))
 
 def main(config):
     device = torch.device("cpu")
