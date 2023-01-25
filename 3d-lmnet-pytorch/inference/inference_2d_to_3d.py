@@ -72,7 +72,7 @@ def test(encoder, autoencoder, test_dataloader, device, config,len_test_dataset)
                 pred_pointcloud = autoencoder.decoder(pred_latent) 
                 distance=0.
                 for j in range(3):
-                    loss,_=chamfer_distance(point_clouds, pred_pointcloud[j,None,:,:])
+                    loss,_=chamfer_distance(point_clouds.permute(0,2,1), pred_pointcloud[j,None,:,:].permute(0,2,1))
                     
                     distance += loss.detach().cpu()
                     
@@ -88,7 +88,7 @@ def test(encoder, autoencoder, test_dataloader, device, config,len_test_dataset)
                 pred_pointcloud = autoencoder.decoder(enc_output)
                 
                 #print(point_clouds.size(),pred_pointcloud.size())
-                loss,_=chamfer_distance(point_clouds, pred_pointcloud)
+                loss,_=chamfer_distance(point_clouds.permute(0,2,1), pred_pointcloud.permute(0,2,1))
                 distance = loss.detach().cpu()
                 #print("Chamfer distance for test input",i,":",distance)
                 if i<50:
