@@ -60,7 +60,7 @@ def test(encoder, autoencoder, test_dataloader, device, config,len_test_dataset)
                     
                     #print("Chamfer distance for test data:",i," the",j,"th prediciton is :",distance)
                     if i<50:
-                        with open(config["2d_inference_variational"] + "inference_"+str(index)+"_"+str(j) + ".npy", "wb") as f:
+                        with open(config["2d_inference_pred"] + "inference_"+str(index)+"_"+str(j) + ".npy", "wb") as f:
                             np.save(f, pred_pointcloud[j,None,:,:].cpu().numpy())
                 total_test_loss+=distance/3
             else:
@@ -72,7 +72,7 @@ def test(encoder, autoencoder, test_dataloader, device, config,len_test_dataset)
                 distance = loss.detach().cpu()
                 #print("Chamfer distance for test input",i,":",distance)
                 if i<50:
-                    with open(config["2d_inference_normal"] + "inference_"+str(index) + ".npy", "wb") as f:
+                    with open(config["2d_inference_pred"] + "inference_"+str(index) + ".npy", "wb") as f:
 
                         np.save(f, pred_pointcloud.cpu().numpy())
 
