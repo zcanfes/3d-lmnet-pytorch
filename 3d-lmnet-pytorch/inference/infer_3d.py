@@ -17,9 +17,9 @@ def main(config):
     test_dataloader = torch.utils.data.DataLoader(
         test_dataset,
         batch_size=config["batch_size"],
-        shuffle=True,  # Shuffling the order of samples is useful during training to prevent that the network learns to depend on the order of the input data
+        shuffle=True,  
         num_workers=config["num_workers"],
-        pin_memory=True,  # This is an implementation detail to speed up data uploading to the GPU
+        pin_memory=True,  
         drop_last=True
     )
 
