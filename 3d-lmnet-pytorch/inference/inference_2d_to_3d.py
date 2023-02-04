@@ -14,27 +14,8 @@ from utils.losses import DiversityLoss
 import os
 from data.shapenet import ShapeNet
 
-def seed_worker(worker_id):
-    worker_seed = torch.initial_seed() % 2**32
-    np.random.seed(worker_seed)
-    random.seed(worker_seed)
-
-g = torch.Generator()
-g.manual_seed(0)
-
 def test(encoder, autoencoder, test_dataloader, device, config,len_test_dataset):
-    """if config["loss_criterion"] == "variational":
-        # TODO: DiversityLoss TANIMLA !!!!!!!
-        loss_div = DiversityLoss(config["alpha"], config["penalty_angle"])
-        loss_latent_matching = nn.MSELoss()
-        loss_latent_matching.to(device)
-        loss_div.to(device)
-    else:
-        if config["loss_criterion"] == "L1":
-            loss_criterion = nn.L1Loss()
-        else:
-            loss_criterion = nn.MSELoss()
-        loss_criterion.to(device)"""
+    
 
     encoder.eval()
     autoencoder.eval()
@@ -87,7 +68,6 @@ def test(encoder, autoencoder, test_dataloader, device, config,len_test_dataset)
                 
                 pred_pointcloud = autoencoder.decoder(enc_output)
                 
-                #print(point_clouds.size(),pred_pointcloud.size())
                 loss,_=chamfer_distance(point_clouds.permute(0,2,1), pred_pointcloud.permute(0,2,1))
                 distance = loss.detach().cpu()
                 #print("Chamfer distance for test input",i,":",distance)
@@ -111,10 +91,10 @@ def main(config):
     test_dataset = ShapeNet("test",config["cat"],image_model=True)
     
     test_dataloader = torch.utils.data.DataLoader(
-        test_dataset, batch_size=config["batch_size"], shuffle=True, num_workers=2, worker_init_fn=seed_worker,
-    generator=g,
-    )
+        test_dataset, batch_size=config["batch_size"], shuffle=False, num_workers=2)
+    
     len_test_dataset=len(test_dataset)
+    
     encoder = ImageEncoder(config["final_layer"], config["bottleneck"])
     encoder.load_state_dict(
         torch.load(config["encoder_path"], map_location="cpu")
@@ -123,7 +103,7 @@ def main(config):
     
     autoencoder.load_state_dict(torch.load(config["3d_autoencoder_path"], map_location="cpu"))
     
-    print("Length of test datsaset:",len_test_dataset)
+    #print("Length of test datsaset:",len_test_dataset)
     
     encoder.to(device)
     autoencoder.to(device)
