@@ -21,7 +21,6 @@ class ShapeNet(torch.utils.data.Dataset):
     def __init__(self, split, cat=13,image_model=False):
         super().__init__()
         assert split in ["train", "valid", "test"]
-        # self.truncation_distance = 3
         self.image_model=image_model
         if cat == 3:
             temp = (
@@ -30,7 +29,7 @@ class ShapeNet(torch.utils.data.Dataset):
                 )
                 .read_text()
                 .splitlines()
-            )  # keep track of shapes based on split
+            )  
             if self.image_model:
                 idx=np.arange(24)
                 self.point_items=list(product(temp,idx))
@@ -44,7 +43,7 @@ class ShapeNet(torch.utils.data.Dataset):
                 )
                 .read_text()
                 .splitlines()
-            )  # keep track of shapes based on split
+            )  
             if self.image_model:
                 idx=np.arange(24)
                 self.point_items=list(product(temp,idx))
@@ -55,7 +54,7 @@ class ShapeNet(torch.utils.data.Dataset):
                 Path(f"/content/3d-lmnet-pytorch/3d-lmnet-pytorch/data/splits/shapenet_point/{split}.txt")
                 .read_text()
                 .splitlines()
-            )  # keep track of shapes based on split
+            ) 
             if self.image_model:
                 idx=np.arange(24)
                 self.point_items=list(product(temp,idx))
