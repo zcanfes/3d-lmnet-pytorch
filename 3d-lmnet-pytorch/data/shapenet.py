@@ -9,13 +9,13 @@ from itertools import product
 
 class ShapeNet(torch.utils.data.Dataset):
     num_classes = 13
-    img_path = Path("/content/3d-lmnet-pytorch/3d-lmnet-pytorch/data/ShapeNetRendering")
-    point_path = Path("/content/3d-lmnet-pytorch/3d-lmnet-pytorch/data/ShapeNet_pointclouds")
+    img_path = Path(os.getcwd()+"/data/ShapeNetRendering")
+    point_path = Path(os.getcwd()+"/data/ShapeNet_pointclouds")
 
     num_to_class_mapping = json.loads(
-        Path("/content/3d-lmnet-pytorch/3d-lmnet-pytorch/data/shape_info.json").read_text()
-    )  # mapping for ShapeNet ids -> names
-    class_to_nums_mapping=json.loads(Path("/content/3d-lmnet-pytorch/3d-lmnet-pytorch/data/class_to_nums.json").read_text())
+        Path(os.getcwd()+"/data/shape_info.json").read_text()
+    )  # ids -> names
+    class_to_nums_mapping=json.loads(Path(os.getcwd()+"/data/class_to_nums.json").read_text())
     class_nums = sorted(num_to_class_mapping.keys())
 
     def __init__(self, split, cat=13,image_model=False):
@@ -25,7 +25,7 @@ class ShapeNet(torch.utils.data.Dataset):
         if cat == 3:
             temp = (
                 Path(
-                    f"/content/3d-lmnet-pytorch/3d-lmnet-pytorch/data/splits/shapenet_point_cat3/{split}_cat3.txt"
+                    os.getcwd()+ f"/data/splits/shapenet_point_cat3/{split}_cat3.txt"
                 )
                 .read_text()
                 .splitlines()
@@ -38,12 +38,12 @@ class ShapeNet(torch.utils.data.Dataset):
 
         elif cat == 1:
             temp = (
-                Path(
-                    f"/content/3d-lmnet-pytorch/3d-lmnet-pytorch/data/splits/shapenet_point_chair/{split}_chair.txt"
+                Path(os.getcwd()+
+                    f"/data/splits/shapenet_point_chair/{split}_chair.txt"
                 )
                 .read_text()
                 .splitlines()
-            )  
+            ) 
             if self.image_model:
                 idx=np.arange(24)
                 self.point_items=list(product(temp,idx))
@@ -51,7 +51,7 @@ class ShapeNet(torch.utils.data.Dataset):
                 self.point_items=temp
         else:
             temp = (
-                Path(f"/content/3d-lmnet-pytorch/3d-lmnet-pytorch/data/splits/shapenet_point/{split}.txt")
+                Path(os.getcwd()+f"/data/splits/shapenet_point/{split}.txt")
                 .read_text()
                 .splitlines()
             ) 
