@@ -104,19 +104,6 @@ class ShapeNet(torch.utils.data.Dataset):
         meta_file=str(ShapeNet.img_path / shapenet_id / "rendering" / "rendering_metadata.txt")
         
         meta=np.loadtxt(meta_file)
-        """for _, _, files in os.walk(ShapeNet.img_path / shapenet_id):
-            png_files=[int(f[:-4]) for f in files if f[-3:] == "png"]
-            
-            png_files.sort()
-            for i,f in enumerate(png_files):
-                file_name=str(f).rjust(2, "0")+".png"
-                p = str(ShapeNet.img_path / shapenet_id / "rendering" / file_name)
-
-                image = cv2.imread(p)[4:-5, 4:-5, :3]
-                image = np.array(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
-                
-                np_res.append(image)
-                np_azimuth.append((np.pi / 180.)*meta[i][0])"""
                 
         file_name=str(img_index).rjust(2, "0")+".png"
         p = str(ShapeNet.img_path / shapenet_id / "rendering" / file_name)
