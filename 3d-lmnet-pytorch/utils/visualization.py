@@ -5,12 +5,11 @@ import matplotlib.pyplot as plt
 
 
 def visualize_pointcloud(points):
-    # try:
-    #     points=points.cpu().numpy()
-    # catch:
-    #     continue
+    
 
     points = points.cpu().numpy()
+    if points.shape[2]!=3:
+        points=points.transpose(0,2,1)
     plt_points = k3d.points(
         positions=points.astype(np.float32), point_size=0.2, shader="3d", color=0x3F6BC5
     )
