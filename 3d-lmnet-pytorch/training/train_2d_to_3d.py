@@ -229,7 +229,7 @@ def main(config):
 
     autoencoder=AutoEncoder(config["autoencoder_bottleneck"],config["autoencoder_hidden_size"],config["autoencoder_output_size"])
     
-    autoencoder.load_state_dict(torch.load(config["3d_encoder_path"], map_location="cpu"))
+    autoencoder.load_state_dict(torch.load(config["3d_autoencoder_path"], map_location="cpu"))
     
 
     if config["resume_ckpt"] is not None:
