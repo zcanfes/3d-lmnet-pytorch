@@ -5,3 +5,6 @@
 */_pycache_*
 _pycache_/*
 */_pycache_/*
+.dist/*
+*/.dist/*
+*/.dist
