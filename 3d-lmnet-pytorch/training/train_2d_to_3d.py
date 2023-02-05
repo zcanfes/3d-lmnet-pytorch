@@ -110,7 +110,7 @@ def train(model_image, autoencoder, train_dataloader, val_dataloader, device, co
                 predicted_latent_from_2d=model_image(image)
            
             if config["loss_criterion"] == "variational":
-                loss = loss_latent_matching(predicted_latent_from_2d, latent_from_pointcloud) + LAMBDA * loss_div(ALPHA, PENALTY_ANGLE, AZIMUTH_INPUT, predicted_latent_from_2d)
+                loss = loss_latent_matching(predicted_latent_from_2d, latent_from_pointcloud) + LAMBDA * loss_div(ALPHA, PENALTY_ANGLE, AZIMUTH_INPUT, std)
                
             else:
                 loss = loss_criterion(predicted_latent_from_2d, latent_from_pointcloud)
@@ -169,7 +169,7 @@ def train(model_image, autoencoder, train_dataloader, val_dataloader, device, co
                    
                     
                     if config["loss_criterion"] == "variational":
-                        loss = loss_latent_matching(predicted_latent_from_2d, latent_from_pointcloud) + LAMBDA * loss_div(ALPHA, PENALTY_ANGLE, AZIMUTH_INPUT, predicted_latent_from_2d)
+                        loss = loss_latent_matching(predicted_latent_from_2d, latent_from_pointcloud) + LAMBDA * loss_div(ALPHA, PENALTY_ANGLE, AZIMUTH_INPUT, std)
                     else:
                         loss = loss_criterion(predicted_latent_from_2d, latent_from_pointcloud)
 
