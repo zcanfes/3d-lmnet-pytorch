@@ -3,11 +3,6 @@ import torch
 import torch.nn.functional as F
 import numpy as np
 
-"""
-    A decoding network which maps points from the latent space back onto the data space.
-"""
-
-
 class Encoder(nn.Module):
     """
     Encoder Module
@@ -22,14 +17,11 @@ class Encoder(nn.Module):
         self.conv4 = nn.Conv1d(128, 256, 1)
         self.conv5 = nn.Conv1d(256, 512, 1)
         
-        
         self.bn1 = nn.BatchNorm1d(64)
         self.bn2 = nn.BatchNorm1d(128)
         self.bn3 = nn.BatchNorm1d(128)
         self.bn4 = nn.BatchNorm1d(256)
         self.bn5 = nn.BatchNorm1d(512)
-
-       
         
     def forward(self, x):
 
@@ -47,8 +39,9 @@ class Encoder(nn.Module):
 
 class Decoder(nn.Module):
     """
-    Decoder Module
+    A decoding network which maps points from the latent space back onto the data space.
     """
+
     def __init__(
         self,
         input_size,
