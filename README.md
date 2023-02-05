@@ -18,8 +18,6 @@ You can download the data using the links below:
 * Rendered Images (~12.3 GB): http://cvgl.stanford.edu/data2/ShapeNetRendering.tgz
 * ShapeNet pointclouds (~2.8 GB): https://drive.google.com/open?id=1cfoe521iTgcB_7-g_98GYAqO553W8Y0g
 
-Note that, we download and unzip the [ShapeNet train/val split file](https://drive.google.com/open?id=10FR-2Lbn55POB1y47MJ12euvobi6mgtc) as the original authors suggested [here](https://github.com/val-iisc/3d-lmnet/blob/master/README.md).
-
 After downloading, extract the folders and move them into data/shapenet/.
 The folder structure should be:
 
