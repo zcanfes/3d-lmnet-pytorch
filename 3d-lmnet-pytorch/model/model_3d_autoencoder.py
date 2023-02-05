@@ -42,7 +42,6 @@ class Encoder(nn.Module):
 
         # Local Max Pooling
         x = torch.max(x, dim=-1)[0]
-        #print("tensor size after encoder " + str(x.size()))
         return x
 
 
@@ -57,11 +56,8 @@ class Decoder(nn.Module):
         output_size,
         bnorm=True,
         bnorm_final=False,
-        regularizer=None,
-        weight_decay=0.001,
         dropout_prob=None,
     ):
-        print(" initial input " + str(input_size) + " initial hidden " + str(hidden_size) + " initial output " + str(output_size) )
         super().__init__()
         self.bnorm = bnorm
         self.bnorm_final = bnorm_final
@@ -84,7 +80,6 @@ class Decoder(nn.Module):
         self.relu = F.relu
 
     def forward(self, x):
-        # print("\ninitial tensor size in decoder " + str(x.size()))
         x = self.fc1(x)
         if self.bnorm:
             x = self.bn1(x)
@@ -103,9 +98,7 @@ class Decoder(nn.Module):
         x = self.fc3(x)
         if self.bnorm_final:
             x = self.bn3(x)
-        # print("tensor size after decoder " + str(x.size())+ "\n")
-        x = x.view(-1,3,2048) # This should be same with the input point cloud shape and be compatible with conv layer
-        #print("tensor size after decoder " + str(x.size())+ "\n")
+        x = x.view(-1,3,2048) 
         return x
 
 class AutoEncoder(nn.Module):
