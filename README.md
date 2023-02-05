@@ -1,1 +1,29 @@
-# Machine Learning for 3D Geometry - Final Project: Implementation of 3D-LMNet with PyTorch
+# Implementation of 3D-LMNet with PyTorch
+This repository contains the PyTorch implementation of the paper [3D-LMNet: Latent Embedding Matching For Accurate and Diverse 3D Point Cloud Reconstruction From a Single Image](https://arxiv.org/abs/1807.07796).
+
+```
+@inproceedings{mandikal20183dlmnet,
+ author = {Mandikal, Priyanka and Navaneet, K L and Agarwal, Mayank and Babu, R Venkatesh},
+ booktitle = {Proceedings of the British Machine Vision Conference ({BMVC})},
+ title = {{3D-LMNet}: Latent Embedding Matching for Accurate and Diverse 3D Point Cloud Reconstruction from a Single Image},
+ year = {2018}
+}
+```
+
+## ShapeNet Dataset
+3D-LMNet trains and validates their models on the ShapeNet dataset and we followed their instructions. The rendered images from the ShapeNet dataset provided by [3d-r2n2](https://github.com/chrischoy/3D-R2N2) is used. We use prepared the sampled points on the corresponding object meshes from ShapeNet to generate the ground truth point clouds. This dataset is prepared by the original authors of 3D-LMNet and we use the link they provided [here](https://github.com/val-iisc/3d-lmnet/blob/master/README.md). Moreover, we split the data using *create_split_files.py*. Please note that, our splits consist of train, validation, and test whereas 3D-LMNet only provides train and validation. For their splits you can refer to: [ShapeNet train/val split file](https://drive.google.com/open?id=10FR-2Lbn55POB1y47MJ12euvobi6mgtc). 
+
+You can download the data using the links below:
+
+* Rendered Images (~12.3 GB): http://cvgl.stanford.edu/data2/ShapeNetRendering.tgz
+* ShapeNet pointclouds (~2.8 GB): https://drive.google.com/open?id=1cfoe521iTgcB_7-g_98GYAqO553W8Y0g
+
+Note that, we download and unzip the [ShapeNet train/val split file](https://drive.google.com/open?id=10FR-2Lbn55POB1y47MJ12euvobi6mgtc) as the original authors suggested [here](https://github.com/val-iisc/3d-lmnet/blob/master/README.md).
+
+After downloading, extract the folders and move them into data/shapenet/.
+The folder structure should be:
+
+--data/shapenet/ <br>
+&nbsp;&nbsp;--ShapeNetRendering/<br>
+&nbsp;&nbsp;--ShapeNet_pointclouds/<br>
+&nbsp;&nbsp;--splits/<br>
