@@ -34,11 +34,11 @@ The folder structure should be:
 
 You can download our pre-trained models using the links below:
 
-* 3D point cloud autoencoder model: https://drive.google.com/file/d/1unq5OYW8WBhb-7ccFWGU2m1B0SaBlCjm/view?usp=sharing
-* 2D image encoder - Variant I with L1 Loss: https://drive.google.com/file/d/1YnNNJ15hwcGqDQHb-7t4HMC-TC1S-1fT/view?usp=share_link
-* 2D image encoder - Variant I with L2 Loss: https://drive.google.com/file/d/1uS13xA3k28jT5kxFHLVUveqm2_kD-5I8/view?usp=share_link
+* [3D point cloud autoencoder model](https://drive.google.com/file/d/1unq5OYW8WBhb-7ccFWGU2m1B0SaBlCjm/view?usp=sharing)
+* [2D image encoder - Variant I with L1 Loss](https://drive.google.com/file/d/1YnNNJ15hwcGqDQHb-7t4HMC-TC1S-1fT/view?usp=share_link)
+* [2D image encoder - Variant I with L2 Loss](https://drive.google.com/file/d/1uS13xA3k28jT5kxFHLVUveqm2_kD-5I8/view?usp=share_link)
 * 2D image encoder - Variant II with diversity loss weight=5.5: 
-* 2D image encoder - Variant II with diversity loss weight=0.5: https://drive.google.com/file/d/1-u4awBG05Kzk2cnkT4v0G-oqj2_7e874/view?usp=share_link
-* 2D image encoder - Variant II with diversity loss weight=0.0: https://drive.google.com/file/d/1TZ40LANluZqIZ4utURnzJ-w8UqydirhE/view?usp=share_link
+* [2D image encoder - Variant II with diversity loss weight=0.5](https://drive.google.com/file/d/1-u4awBG05Kzk2cnkT4v0G-oqj2_7e874/view?usp=share_link)
+* [2D image encoder - Variant II with diversity loss weight=0.0](https://drive.google.com/file/d/1TZ40LANluZqIZ4utURnzJ-w8UqydirhE/view?usp=share_link)
 
 
