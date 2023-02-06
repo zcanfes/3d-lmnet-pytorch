@@ -1,6 +1,5 @@
 import os
 import time
-
 import torch
 import pytorch3d
 import torch.optim as optim
@@ -92,18 +91,11 @@ def main(config):
                 optimizer.zero_grad()
 
                 point_clouds = data["point"]
-                
-                f_name = config["3d_ae_gt"] + str(index) + '.npy'
-                with open(f_name, 'wb') as f:
-                    np.save(f, (point_clouds.cpu().numpy()))
 
                 point_clouds = point_clouds.permute(0, 2, 1)
                 point_clouds=point_clouds.type(torch.cuda.FloatTensor)
 
                 recons = autoencoder(point_clouds)
-                f_name_recons = config["3d_ae_pred"] + str(index) + '.npy'
-                with open(f_name_recons, 'wb') as f:
-                    np.save(f, (recons.permute(0, 2, 1).cpu().numpy()))
 
                 loss,_=chamfer_distance(point_clouds.permute(0, 2, 1), recons.permute(0, 2, 1))
                 total_chamfer_loss += loss.detach().cpu()
