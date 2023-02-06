@@ -9,12 +9,10 @@ from pytorch3d.loss import chamfer_distance
 from data.shapenet import ShapeNet
 from model.model_2d import ImageEncoder
 from model.model_3d_autoencoder import AutoEncoder
-from utils.visualization import visualize_pointcloud, visualize_image
-from utils.losses import DiversityLoss
 import os
 from data.shapenet import ShapeNet
 
-def test(encoder, autoencoder, test_dataloader, device, config,len_test_dataset):
+def test(encoder, autoencoder, test_dataloader, device, config):
     
 
     encoder.eval()
@@ -30,7 +28,6 @@ def test(encoder, autoencoder, test_dataloader, device, config,len_test_dataset)
             ShapeNet.move_batch_to_device(batch, device)
             point_clouds = batch["point"]
             
-            # print("point_clouds shape:", point_clouds.shape)
             point_clouds = point_clouds.permute(0, 2, 1)
             point_clouds=point_clouds.type(torch.cuda.FloatTensor)
 
@@ -57,8 +54,6 @@ def test(encoder, autoencoder, test_dataloader, device, config,len_test_dataset)
                     
                     distance += loss.detach().cpu()
                     
-                    
-                    #print("Chamfer distance for test data:",i," the",j,"th prediciton is :",distance)
                     if i<50:
                         with open(config["2d_inference_pred"] + "inference_"+str(index)+"_"+str(j) + ".npy", "wb") as f:
                             np.save(f, pred_pointcloud[j,None,:,:].cpu().numpy())
@@ -70,7 +65,6 @@ def test(encoder, autoencoder, test_dataloader, device, config,len_test_dataset)
                 
                 loss,_=chamfer_distance(point_clouds.permute(0,2,1), pred_pointcloud.permute(0,2,1))
                 distance = loss.detach().cpu()
-                #print("Chamfer distance for test input",i,":",distance)
                 if i<50:
                     with open(config["2d_inference_pred"] + "inference_"+str(index) + ".npy", "wb") as f:
 
@@ -93,8 +87,6 @@ def main(config):
     test_dataloader = torch.utils.data.DataLoader(
         test_dataset, batch_size=config["batch_size"], shuffle=False, num_workers=2)
     
-    len_test_dataset=len(test_dataset)
-    
     encoder = ImageEncoder(config["final_layer"], config["bottleneck"])
     encoder.load_state_dict(
         torch.load(config["encoder_path"], map_location="cpu")
@@ -113,6 +105,5 @@ def main(config):
         autoencoder,
         test_dataloader,
         device,
-        config,
-        len_test_dataset
+        config
     )
