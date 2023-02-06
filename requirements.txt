@@ -1,7 +1,5 @@
 jupyter>=1.0.0
-K3D>=2.9.4
 matplotlib>=3.4.1
-trimesh>=3.9.14
 torch>=1.8.1
 pytorch-lightning>=1.2.8
 scikit-image>=0.18.1
