@@ -1,7 +1,4 @@
-import argparse
-import os
 import time
-
 import torch
 import pytorch3d
 import torch.optim as optim

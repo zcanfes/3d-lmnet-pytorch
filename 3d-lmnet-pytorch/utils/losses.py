@@ -2,7 +2,6 @@ import torch
 import torch.nn as nn
 import numpy as np
 
-
 class DiversityLoss(nn.Module):
 
     def __call__(self, alpha, penalty_angle, azimuth_input, z_sigma):

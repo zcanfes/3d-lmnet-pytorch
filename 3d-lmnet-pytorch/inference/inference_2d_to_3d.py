@@ -1,9 +1,6 @@
-import random
-from pathlib import Path
 import numpy as np
 import torch
 import torch.nn as nn
-import os
 import pytorch3d
 from pytorch3d.loss import chamfer_distance
 from data.shapenet import ShapeNet
@@ -94,8 +91,6 @@ def main(config):
     autoencoder=AutoEncoder(config["autoencoder_bottleneck"],config["autoencoder_hidden_size"],config["autoencoder_output_size"])
     
     autoencoder.load_state_dict(torch.load(config["3d_autoencoder_path"], map_location="cpu"))
-    
-    #print("Length of test datsaset:",len_test_dataset)
     
     encoder.to(device)
     autoencoder.to(device)

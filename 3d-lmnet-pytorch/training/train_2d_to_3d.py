@@ -1,9 +1,6 @@
-from pathlib import Path
-import numpy as np
 import torch
 import torch.nn as nn
 from model.model_2d import ImageEncoder
-from model.model_3d_autoencoder import Encoder
 from utils.losses import DiversityLoss
 import os
 from data.shapenet import ShapeNet
