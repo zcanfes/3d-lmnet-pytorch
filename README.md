@@ -21,10 +21,12 @@ You can download the data using the links below:
 After downloading, extract the folders and move them into data/shapenet/.
 The folder structure should be:
 
---data/shapenet/ <br>
-&nbsp;&nbsp;--ShapeNetRendering/<br>
+--data/ <br>
+&nbsp;&nbsp;--ShapeNetRendering.tgz/<br>
 &nbsp;&nbsp;--ShapeNet_pointclouds/<br>
 &nbsp;&nbsp;--splits/<br>
+
+After downloading the `ShapeNetRendering.tgz`, the 3D-LMNET.ipynb covers the unzipping and extracting of the folder.
 
 ## Run the code
 
