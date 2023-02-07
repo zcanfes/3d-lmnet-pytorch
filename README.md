@@ -15,18 +15,17 @@ This repository contains the unofficial PyTorch implementation of the paper [3D-
 
 You can download the data using the links below:
 
-* Rendered Images (~12.3 GB): http://cvgl.stanford.edu/data2/ShapeNetRendering.tgz
-* ShapeNet pointclouds (~2.8 GB): https://drive.google.com/open?id=1cfoe521iTgcB_7-g_98GYAqO553W8Y0g
+* Rendered Images zip(~12.3 GB): http://cvgl.stanford.edu/data2/ShapeNetRendering.tgz
+* ShapeNet pointclouds zip (~2.8 GB): https://drive.google.com/open?id=1cfoe521iTgcB_7-g_98GYAqO553W8Y0g
 
-After downloading, extract the folders and move them into data/shapenet/.
-The folder structure should be:
+**_You should only upload ShapeNet_pointclouds.zip dataset, whose link we shared above,_ to this directory: data/shapenet/**
+* Our 3D-LMNET.ipynb covers unzipping [ShapeNet_pointclouds.zip](https://drive.google.com/open?id=1cfoe521iTgcB_7-g_98GYAqO553W8Y0g), downloading and unzipping [Rendered Images](http://cvgl.stanford.edu/data2/ShapeNetRendering.tgz) dataset. 
+The **data** directory's file structure should look like this after executing dataset preparation cells on the 3D-LMNET.ipynb:
 
 --data/ <br>
-&nbsp;&nbsp;--ShapeNetRendering.tgz/<br>
+&nbsp;&nbsp;--ShapeNetRendering/<br>
 &nbsp;&nbsp;--ShapeNet_pointclouds/<br>
 &nbsp;&nbsp;--splits/<br>
-
-After downloading the `ShapeNetRendering.tgz`, the 3D-LMNET.ipynb covers the unzipping and extracting of the folder.
 
 ## Run the code
 
