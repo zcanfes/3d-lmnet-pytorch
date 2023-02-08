@@ -65,8 +65,6 @@ Here, you can change the `lambda` parameter to increase/decrease the weight of t
 The inference stage outputs the input images, ground truth point cloud, and the reconstructed (predicted) point clouds in `.npy`file format. 
 To run the code in the `3D-LMNET.ipynb`, run the cells under the `Inference` depending on the variant you want to do inference on. 
 
-**Important Note:** Before running the Inference cells, you should download the pre-trained models and create a folder `3d-lmnet-pytorch/3d-lmnet-pytorch/trained_models/`  and move the models you want to use for inference to trained_models/.
-
 For each trained model, you can use the corresponding Inference cells and obtain the results.
 
 ### Visualization (Rendering) of Point Clouds
