@@ -42,6 +42,8 @@ You can download our pre-trained models using the links below:
 
 After downloading the pre-trained models and the datasets, you can run the code using the `3D-LMNET.ipynb` file. You should run the cells under the `Imports and Setup` as well as the `Inference`. 
 
+**Important Note:** After downloading the pre-trained models, create a folder called `3d-lmnet-pytorch/3d-lmnet-pytorch/trained_models/` and move the models to that directory before running the Inference code. 
+
 After the inference is over, you can run the cells under the `Visualize Reconstructed Point Clouds` to visualize your results using PyTorch3d. 
 
 ### Training 
