@@ -40,4 +40,74 @@ You can download our pre-trained models using the links below:
 * [2D image encoder - Variant II with diversity loss weight=0.5](https://drive.google.com/file/d/1-u4awBG05Kzk2cnkT4v0G-oqj2_7e874/view?usp=share_link)
 * [2D image encoder - Variant II with diversity loss weight=0.0](https://drive.google.com/file/d/1TZ40LANluZqIZ4utURnzJ-w8UqydirhE/view?usp=share_link)
 
+After downloading the pre-trained models and the datasets, you can run the code using the `3D-LMNET.ipynb` file. You should run the cells under the `Imports and Setup` as well as the `Inference`. 
+
+**Important Note:** After downloading the pre-trained models, create a folder called `3d-lmnet-pytorch/3d-lmnet-pytorch/trained_models/` and move the models to that directory before running the Inference code. 
+
+After the inference is over, you can run the cells under the `Visualize Reconstructed Point Clouds` to visualize your results using PyTorch3d. 
+
+### Training 
+
+After downloading, the whole training process can be done using the `3D-LMNET.ipynb` file. You can use the config dictionary to change the experimental setup.
+
+1. To train the autoencoder model run the cells under `3D Point Cloud Autoencoder Training`. 
+
+**Important Note:** The autoencoder should be trained or a pre-trained autoencoder should be use for the training of the 2D image encoder. 
+
+2. To train the 2D image encoder model, run the cells under the `2D Image Encoder Training` depending on which variant you want to train.
+
+* For training the non-probabilistic version of the image encoder (Variant I) and with L1 loss, run the cells under the `Variant I - Latent Matching with L1 Loss`. 
+* For training the non-probabilistic version of the image encoder (Variant I) and with L2 loss, run the cells under the `Variant I - Latent Matching with L2 Loss`. 
+* For training the probabilistic version of the image encoder (Variant II), run the cells under the `Variant II - Probabilistic Latent Matching`. 
+
+Here, you can change the `lambda` parameter to increase/decrease the weight of the diversity loss. 
+
+### Inference
+
+The inference stage outputs the input images, ground truth point cloud, and the reconstructed (predicted) point clouds in `.npy`file format. 
+To run the code in the `3D-LMNET.ipynb`, run the cells under the `Inference` depending on the variant you want to do inference on. 
+
+For each trained model, you can use the corresponding Inference cells and obtain the results.
+
+### Visualization (Rendering) of Point Clouds
+
+After obtaining the `.npy` point cloud and image files in the Inference, you can use run the cells under `Visualize Reconstructed Point Clouds` in the `3D-LMNET.ipynb` file. Here, [PyTorch3d ](https://pytorch3d.org/) is used for rendering. You can change the camera setup and many more settings using the PyTorch3d documentation. 
+
+## Our Results
+
+### 3D Point Cloud Autoencoder Reconstructions
+
+<p align="center">
+<img src="https://user-images.githubusercontent.com/56366573/217518538-593b8e59-34b9-46ca-b894-29a7c038499d.png"  width="30%" height="30%">
+</p>
+
+### Single-View Reconstructions with Variant I - L1 Loss
+
+<p align="center">
+<img src=https://user-images.githubusercontent.com/56366573/217519250-a96dfc93-a3fa-492b-9eb6-563e2f1dfec2.png   width="30%" height="30%">
+</p>
+
+### Single-View Reconstructions with Variant I - L2 Loss
+
+<p align="center">
+<img src=https://user-images.githubusercontent.com/56366573/217519400-8756bc4c-5483-4c5f-af11-d1ccf70e965f.png   width="30%" height="30%">
+</p>
+
+### Single-View Reconstructions with Variant II - Diversity Loss Weight = 5.5
+
+<p align="center">
+<img src=https://user-images.githubusercontent.com/56366573/217519584-c4c69cb6-572d-4208-bb30-a5819b231e9f.png   width="30%" height="30%">
+</p>
+
+### Single-View Reconstructions with Variant II - Different Weights for Diversity Loss
+
+
+<p align="center">
+<img src=https://user-images.githubusercontent.com/56366573/217520645-03efb7a2-473e-420c-88a0-40b53ea62991.png  width="50%" height="50%">
+</p>
+
+
+
+
+
 
