@@ -115,7 +115,7 @@ After obtaining the `.npy` point cloud and image files in the inference stage, y
 
 ## Acknowledgment
 
-This PyTorch implementation is based on the [original TensorFlow implementation](https://github.com/val-iisc/3d-lmnet) of the paper [3D-LMNet: Latent Embedding Matching For Accurate and Diverse 3D Point Cloud Reconstruction From a Single Image](https://arxiv.org/abs/1807.07796). The original TensorFlow implementation is licensed under the [MIT License](#Original-License), which is also provided in the original TensorFlow repository (see [the original license](https://github.com/val-iisc/3d-lmnet/blob/master/LICENSE) for more details).
+This PyTorch implementation is based on the [original TensorFlow implementation](https://github.com/val-iisc/3d-lmnet) of the paper [3D-LMNet: Latent Embedding Matching For Accurate and Diverse 3D Point Cloud Reconstruction From a Single Image](https://arxiv.org/abs/1807.07796). The original TensorFlow implementation is licensed under the [MIT License](#Original-License-of-the-TensorFlow-Implementation) below, which is also provided in the original TensorFlow repository (see [the original license](https://github.com/val-iisc/3d-lmnet/blob/master/LICENSE) for more details).
 
 ## Original License of the TensorFlow Implementation
 
