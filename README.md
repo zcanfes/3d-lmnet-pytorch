@@ -144,3 +144,4 @@ SOFTWARE.
 
 ## License for This Implementation
 
+The MIT license for this repository can be found [here](https://github.com/zcanfes/3d-lmnet-pytorch/blob/main/LICENSE).
