@@ -69,7 +69,7 @@ The whole training process can be done using the `3D-LMNET.ipynb` file. You can 
 
 Here, you can change the `lambda` parameter to increase/decrease the weight of the diversity loss.
 
-### Inference
+### Testing
 
 The inference stage outputs the input images, ground truth point clouds, and the reconstructed (predicted) point clouds in `.npy` file format. To run the code in `3D-LMNET.ipynb`, run the cells under `Inference` depending on the variant you want to do inference on.
 
