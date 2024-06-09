@@ -14,7 +14,7 @@ year = {2018}
 ```
 
 
-## ShapeNet Dataset
+## 1. Dataset
 
 3D-LMNet trains and validates their models on the ShapeNet dataset, and we followed their instructions. The rendered images from the ShapeNet dataset provided by [3d-r2n2](https://github.com/chrischoy/3D-R2N2) are used. We prepared the sampled points on the corresponding object meshes from ShapeNet to generate the ground truth point clouds. This dataset is prepared by the original authors of 3D-LMNet, and we use the link they provided [here](https://github.com/val-iisc/3d-lmnet/blob/master/README.md). Moreover, we split the data using *create_split_files.py* with a 60-20-20 convention. We created splits for the whole dataset for 13 classes, splits for only 3 classes (chair, airplane, car), and for the chair class only. Please note that our splits for each of those cases consist of train, validation, and test, whereas 3D-LMNet only provides train and validation. For their splits, you can refer to: [ShapeNet train/val split file](https://drive.google.com/open?id=10FR-2Lbn55POB1y47MJ12euvobi6mgtc).
 
@@ -36,9 +36,9 @@ The **data** directory's file structure should look like this after executing th
 
 
 
-## Run the Code
+## 2. Run the Code
 
-### The Pre-trained Models
+### 2.1. The Pre-trained Models
 
 You can download our pre-trained models using the links below:
 
@@ -53,7 +53,7 @@ After downloading the pre-trained models and the datasets, you can run the code 
 
 After the inference is over, you can run the cells under `Visualize Reconstructed Point Clouds` to visualize your results using PyTorch3d.
 
-### Training
+### 2.2. Training
 
 The whole training process can be done using the `3D-LMNET.ipynb` file. You can use the config dictionary to change the experimental setup.
 
@@ -69,44 +69,44 @@ The whole training process can be done using the `3D-LMNET.ipynb` file. You can 
 
 Here, you can change the `lambda` parameter to increase/decrease the weight of the diversity loss.
 
-### Testing
+### 2.3. Testing
 
 The inference stage outputs the input images, ground truth point clouds, and the reconstructed (predicted) point clouds in `.npy` file format. To run the code in `3D-LMNET.ipynb`, run the cells under `Inference` depending on the variant you want to do inference on.
 
 For each trained model, you can use the corresponding inference cells to obtain the results.
 
-### Visualization (Rendering) of Point Clouds
+### 2.4. Visualization (Rendering) of Point Clouds
 
 After obtaining the `.npy` point cloud and image files in the inference stage, you can run the cells under `Visualize Reconstructed Point Clouds` in the `3D-LMNET.ipynb` file. Here, [PyTorch3d](https://pytorch3d.org/) is used for rendering. You can change the camera setup and many more settings using the PyTorch3d documentation.
 
 
-## Our Results
+## 3. Our Results
 
-### 3D Point Cloud Autoencoder Reconstructions
+### 3.1. 3D Point Cloud Autoencoder Reconstructions
 
 <p align="center">
 <img src="https://user-images.githubusercontent.com/56366573/217518538-593b8e59-34b9-46ca-b894-29a7c038499d.png"  width="30%" height="30%">
 </p>
 
-### Single-View Reconstructions with Variant I - L1 Loss
+### 3.2. Single-View Reconstructions with Variant I - L1 Loss
 
 <p align="center">
 <img src="https://user-images.githubusercontent.com/56366573/217519250-a96dfc93-a3fa-492b-9eb6-563e2f1dfec2.png" width="30%" height="30%">
 </p>
 
-### Single-View Reconstructions with Variant I - L2 Loss
+### 3.3. Single-View Reconstructions with Variant I - L2 Loss
 
 <p align="center">
 <img src="https://user-images.githubusercontent.com/56366573/217519400-8756bc4c-5483-4c5f-af11-d1ccf70e965f.png" width="30%" height="30%">
 </p>
 
-### Single-View Reconstructions with Variant II - Diversity Loss Weight = 5.5
+### 3.4. Single-View Reconstructions with Variant II - Diversity Loss Weight = 5.5
 
 <p align="center">
 <img src="https://user-images.githubusercontent.com/56366573/217519584-c4c69cb6-572d-4208-bb30-a5819b231e9f.png" width="30%" height="30%">
 </p>
 
-### Single-View Reconstructions with Variant II - Different Weights for Diversity Loss
+### 3.5. Single-View Reconstructions with Variant II - Different Weights for Diversity Loss
 
 <p align="center">
 <img src="https://user-images.githubusercontent.com/56366573/217520645-03efb7a2-473e-420c-88a0-40b53ea62991.png" width="50%" height="50%">
@@ -114,11 +114,11 @@ After obtaining the `.npy` point cloud and image files in the inference stage, y
 
 
 
-## Acknowledgment
+## 4. Acknowledgment
 
 This PyTorch implementation is based on the [original TensorFlow implementation](https://github.com/val-iisc/3d-lmnet) of the paper [3D-LMNet: Latent Embedding Matching For Accurate and Diverse 3D Point Cloud Reconstruction From a Single Image](https://arxiv.org/abs/1807.07796). The original TensorFlow implementation is licensed under the [MIT License](#Original-License-of-the-TensorFlow-Implementation) below, which is also provided in the original TensorFlow repository (see [the original license](https://github.com/val-iisc/3d-lmnet/blob/master/LICENSE) for more details).
 
-## Original License of the TensorFlow Implementation
+## 5. Original License of the TensorFlow Implementation
 
 ```
 MIT License
@@ -146,6 +146,6 @@ SOFTWARE.
 ```
 
 
-## License for This Implementation
+## 6. License for This Implementation
 
 The MIT license for this repository can be found [here](https://github.com/zcanfes/3d-lmnet-pytorch/blob/main/LICENSE).
