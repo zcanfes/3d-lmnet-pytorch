@@ -38,6 +38,21 @@ The **data** directory's file structure should look like this after executing th
 
 ## Run the Code
 
+### The Pre-trained Models
+
+You can download our pre-trained models using the links below:
+
+* [3D point cloud autoencoder model](https://drive.google.com/file/d/1Mz_I-nbdbusK_vdN9uLw8_csaDVe-czH/view?usp=sharing)
+* [2D image encoder - Variant I with L1 Loss](https://drive.google.com/file/d/1D26-dkhH4RwGMMJ8AfG5jbVMv0lFYFLo/view?usp=sharing)
+* [2D image encoder - Variant I with L2 Loss](https://drive.google.com/file/d/1g6rwV_iopa_43j5QOoukGUoK2T6Khzn7/view?usp=sharing)
+* [2D image encoder - Variant II with diversity loss weight=5.5](https://drive.google.com/file/d/1yiIU6BE3sJbLdCnQ2qRjcl2cpqFVAZJm/view?usp=sharing)
+
+After downloading the pre-trained models and the datasets, you can run the code using the `3D-LMNET.ipynb` file. You should run the cells under `Imports and Setup` as well as `Inference`.
+
+**Important Note:** After downloading the pre-trained models, create a folder called `3d-lmnet-pytorch/3d-lmnet-pytorch/trained_models/` and move the models to that directory before running the inference code.
+
+After the inference is over, you can run the cells under `Visualize Reconstructed Point Clouds` to visualize your results using PyTorch3d.
+
 ### Training
 
 The whole training process can be done using the `3D-LMNET.ipynb` file. You can use the config dictionary to change the experimental setup.
@@ -63,6 +78,7 @@ For each trained model, you can use the corresponding inference cells to obtain 
 ### Visualization (Rendering) of Point Clouds
 
 After obtaining the `.npy` point cloud and image files in the inference stage, you can run the cells under `Visualize Reconstructed Point Clouds` in the `3D-LMNET.ipynb` file. Here, [PyTorch3d](https://pytorch3d.org/) is used for rendering. You can change the camera setup and many more settings using the PyTorch3d documentation.
+
 
 ## Our Results
 
@@ -95,6 +111,8 @@ After obtaining the `.npy` point cloud and image files in the inference stage, y
 <p align="center">
 <img src="https://user-images.githubusercontent.com/56366573/217520645-03efb7a2-473e-420c-88a0-40b53ea62991.png" width="50%" height="50%">
 </p>
+
+
 
 ## Acknowledgment
 
