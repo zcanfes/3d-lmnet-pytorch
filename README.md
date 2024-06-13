@@ -1,6 +1,7 @@
 # Implementation of 3D-LMNet with PyTorch
-This repository contains the unofficial PyTorch implementation of the paper [3D-LMNet: Latent Embedding Matching For Accurate and Diverse 3D Point Cloud Reconstruction From a Single Image](https://arxiv.org/abs/1807.07796).
+This repository contains the **unofficial PyTorch implementation** of the paper [3D-LMNet: Latent Embedding Matching For Accurate and Diverse 3D Point Cloud Reconstruction From a Single Image](https://arxiv.org/abs/1807.07796) which is originally implemented in TensorFlow. The official TensorFlow implementation of the paper provided by the authors can be found [here](https://github.com/val-iisc/3d-lmnet).
 
+To cite the original work of the authors you can use the following: 
 ```
 @inproceedings{mandikal20183dlmnet,
  author = {Mandikal, Priyanka and Navaneet, K L and Agarwal, Mayank and Babu, R Venkatesh},
@@ -10,7 +11,7 @@ This repository contains the unofficial PyTorch implementation of the paper [3D-
 }
 ```
 
-## Data
+## 1. Data
 3D-LMNet trains and validates their models on the ShapeNet dataset and we followed their instructions. The rendered images from the ShapeNet dataset provided by [3d-r2n2](https://github.com/chrischoy/3D-R2N2) is used. We use prepared the sampled points on the corresponding object meshes from ShapeNet to generate the ground truth point clouds. This dataset is prepared by the original authors of 3D-LMNet and we use the link they provided [here](https://github.com/val-iisc/3d-lmnet/blob/master/README.md). Moreover, we split the data using *create_split_files.py* using 60-20-20 convention. We created splits for the whole dataclass for 13 classes, splits for only 3 classes (chair, airplane, car) and for chair class only. Please note that, our splits for each of those cases consist of train, validation, and test whereas 3D-LMNet only provides train and validation. For their splits you can refer to: [ShapeNet train/val split file](https://drive.google.com/open?id=10FR-2Lbn55POB1y47MJ12euvobi6mgtc). 
 
 You can download the data using the links below:
@@ -27,9 +28,9 @@ The **data** directory's file structure should look like this after executing da
 &nbsp;&nbsp;--ShapeNet_pointclouds/<br>
 &nbsp;&nbsp;--splits/<br>
 
-## Requirements
+## 2. Requirements
 
-### Tested Environment
+### 2.1. Tested Environment
 
 * Linux
 * Python 3.8
@@ -37,7 +38,7 @@ The **data** directory's file structure should look like this after executing da
 * PyTorch 1.12.0
 * PyTorch3D 0.7.2
 
-## Install Dependencies
+## 2.2. Install Dependencies
 
 First, clone the repository and create a Conda environment:
 
@@ -66,10 +67,10 @@ Install other dependencies (this may take some time):
 pip install -r requirements.txt
 ```
 
-## Training
+## 3. Training
 Train the 3D autoencoder and the 2D image encoders using the following instructions.
 
-### Command Line
+### 3.1. Command Line
 
 Create the config files for each of your experiments. Some config examples are provided in the `config` folder. 
 
@@ -102,7 +103,7 @@ python test.py --config ./config/test_2d_div.yaml --experiment 2d_to_3d
 python pc_visualization.py --config ./config/pc_visualization.yaml
 ```
 
-### Notebook
+### 3.2. Notebook
 
 After downloading, the whole training process can be done using the `3D-LMNET.ipynb` file. You can use the config dictionary to change the experimental setup.
 
@@ -118,18 +119,18 @@ After downloading, the whole training process can be done using the `3D-LMNET.ip
 
 Here, you can change the `lambda` parameter to increase/decrease the weight of the diversity loss. 
 
-## Inference
+## 4. Inference
 
 The inference stage outputs the input images, ground truth point cloud, and the reconstructed (predicted) point clouds in `.npy`file format. 
 To run the code in the `3D-LMNET.ipynb`, run the cells under the `Inference` depending on the variant you want to do inference on. 
 
 For each trained model, you can use the corresponding Inference cells and obtain the results.
 
-### Visualization (Rendering) of Point Clouds
+### 4.1. Visualization (Rendering) of Point Clouds
 
 After obtaining the `.npy` point cloud and image files in the Inference, you can use run the cells under `Visualize Reconstructed Point Clouds` in the `3D-LMNET.ipynb` file. Here, [PyTorch3d ](https://pytorch3d.org/) is used for rendering. You can change the camera setup and many more settings using the PyTorch3d documentation. 
 
-## The Pre-trained models
+## 5. The Pre-trained models
 
 You can download our pre-trained models using the links below:
 
@@ -146,15 +147,15 @@ After downloading the pre-trained models and the datasets, you can run the code 
 
 After the inference is over, you can run the cells under the `Visualize Reconstructed Point Clouds` to visualize your results using PyTorch3d. 
 
-## Our Results
+## 6. Our Results
 
-### 3D Point Cloud Autoencoder Reconstructions
+### 6.1. 3D Point Cloud Autoencoder Reconstructions
 
 <p align="center">
 <img src="https://user-images.githubusercontent.com/56366573/217518538-593b8e59-34b9-46ca-b894-29a7c038499d.png"  width="30%" height="30%">
 </p>
 
-### Single-View Reconstructions with Variant I - L1 Loss
+### 6.2. Single-View Reconstructions with Variant I - L1 Loss
 
 <p align="center">
 <img src=https://user-images.githubusercontent.com/56366573/217519250-a96dfc93-a3fa-492b-9eb6-563e2f1dfec2.png   width="30%" height="30%">
@@ -166,13 +167,13 @@ After the inference is over, you can run the cells under the `Visualize Reconstr
 <img src=https://user-images.githubusercontent.com/56366573/217519400-8756bc4c-5483-4c5f-af11-d1ccf70e965f.png   width="30%" height="30%">
 </p>
 
-### Single-View Reconstructions with Variant II - Diversity Loss Weight = 5.5
+### 6.3. -View Reconstructions with Variant II - Diversity Loss Weight = 5.5
 
 <p align="center">
 <img src=https://user-images.githubusercontent.com/56366573/217519584-c4c69cb6-572d-4208-bb30-a5819b231e9f.png   width="30%" height="30%">
 </p>
 
-### Single-View Reconstructions with Variant II - Different Weights for Diversity Loss
+### 6.4. Single-View Reconstructions with Variant II - Different Weights for Diversity Loss
 
 
 <p align="center">
@@ -180,7 +181,40 @@ After the inference is over, you can run the cells under the `Visualize Reconstr
 </p>
 
 
+## 7. Acknowledgment
+
+This PyTorch implementation is based on the [original TensorFlow implementation](https://github.com/val-iisc/3d-lmnet) of the paper [3D-LMNet: Latent Embedding Matching For Accurate and Diverse 3D Point Cloud Reconstruction From a Single Image](https://arxiv.org/abs/1807.07796). The original TensorFlow implementation is licensed under the [MIT License](#Original-License-of-the-TensorFlow-Implementation) below, which is also provided in the original TensorFlow repository (see [the original license](https://github.com/val-iisc/3d-lmnet/blob/master/LICENSE) for more details).
+
+## 8. Original License of the TensorFlow Implementation
+
+```
+MIT License
+
+Copyright (c) 2018 Video Analytics Lab -- IISc
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+```
 
 
+## 9. License for This Implementation
+
+The MIT license for this repository can be found [here](https://github.com/zcanfes/3d-lmnet-pytorch/blob/main/LICENSE).
 
 
