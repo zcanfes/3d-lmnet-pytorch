@@ -9,8 +9,8 @@ from itertools import product
 
 class ShapeNet(torch.utils.data.Dataset):
     num_classes = 13
-    img_path = Path(os.getcwd()+"/data/ShapeNetRendering")
-    point_path = Path(os.getcwd()+"/data/ShapeNet_pointclouds")
+    img_path = Path("/usr/stud/cze/storage/user/ShapeNetRendering") # Path(getcwd()+"/data/ShapeNetRendering")
+    point_path = Path("/usr/stud/cze/storage/user/ShapeNet_pointclouds")# Path(os.getcwd()+"/data/ShapeNet_pointclouds")
 
     num_to_class_mapping = json.loads(
         Path(os.getcwd()+"/data/shape_info.json").read_text()
@@ -92,7 +92,7 @@ class ShapeNet(torch.utils.data.Dataset):
     def get_point_numpy(shapenet_id):
         np_arr = np.load(ShapeNet.point_path / shapenet_id / "pointcloud_2048.npy")
         
-        convertedArray = np_arr.astype(np.float)
+        convertedArray = np_arr.astype(np.float64)
 
         return convertedArray
 
@@ -102,7 +102,7 @@ class ShapeNet(torch.utils.data.Dataset):
         np_azimuth=[]
         meta_file=str(ShapeNet.img_path / shapenet_id / "rendering" / "rendering_metadata.txt")
         
-        meta=np.loadtxt(meta_file)
+        meta=np.loadtxt(Path(meta_file))
                 
         file_name=str(img_index).rjust(2, "0")+".png"
         p = str(ShapeNet.img_path / shapenet_id / "rendering" / file_name)
