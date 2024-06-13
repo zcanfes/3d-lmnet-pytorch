@@ -1,4 +1,4 @@
-# Implementation of 3D-LMNet with PyTorch
+# 3D-LMNet - Unofficial PyTorch Implementation
 This repository contains the **unofficial PyTorch implementation** of the paper [3D-LMNet: Latent Embedding Matching For Accurate and Diverse 3D Point Cloud Reconstruction From a Single Image](https://arxiv.org/abs/1807.07796) which is originally implemented in TensorFlow. The official TensorFlow implementation of the paper provided by the authors can be found [here](https://github.com/val-iisc/3d-lmnet).
 
 To cite the original work of the authors you can use the following: 
