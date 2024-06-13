@@ -12,13 +12,13 @@ def train(model_image, autoencoder, train_dataloader, val_dataloader, device, co
     loss_criterion = None
     best_distance = 1e3
 
+    lr = float(config["lr"])
+
     if config["loss_criterion"] == "variational":
 
         ALPHA = config["alpha"]
         PENALTY_ANGLE = config["penalty_angle"]
         LAMBDA = config["lambda"]
-
-        
 
         loss_div = DiversityLoss()
         loss_latent_matching = nn.MSELoss()
@@ -30,17 +30,17 @@ def train(model_image, autoencoder, train_dataloader, val_dataloader, device, co
             [
                 {
                     "params": model_image.base.parameters(),
-                    "lr": config["learning_rate_model"],
+                    "lr": lr,
                     "weight_decay": 1e-5,
                 },
                 {
                     "params": model_image.mu.parameters(),
-                    "lr": config["learning_rate_model"],
+                    "lr": lr,
                     "weight_decay": 1e-3,
                 },
                 {
                     "params": model_image.std.parameters(),
-                    "lr": config["learning_rate_model"],
+                    "lr": lr,
                     "weight_decay": 1e-3,
                 },
             ]
@@ -50,24 +50,27 @@ def train(model_image, autoencoder, train_dataloader, val_dataloader, device, co
 
         if config["loss_criterion"] == "L1":
             loss_criterion = nn.L1Loss()
-        else:
+        elif config["loss_criterion"] == "L2":
             loss_criterion = nn.MSELoss()
+        else:
+            raise ValueError("Invalid loss criterion")
 
         loss_criterion.to(device)
         optimizer = torch.optim.Adam(
             [
                 {
                     "params": model_image.base.parameters(),
-                    "lr": config["learning_rate_model"],
+                    "lr": lr,
                     "weight_decay": 1e-5,
                 },
                 {
                     "params": model_image.latent.parameters(),
-                    "lr": config["learning_rate_model"],
+                    "lr": lr,
                     "weight_decay": 1e-3,
                 },
             ]
         )
+    
     model_image.train()
     autoencoder.eval()
 
@@ -87,8 +90,6 @@ def train(model_image, autoencoder, train_dataloader, val_dataloader, device, co
             point_clouds = point_clouds.permute(0, 2, 1)
             point_clouds=point_clouds.type(torch.cuda.FloatTensor)
             latent_from_pointcloud = autoencoder.encoder(point_clouds)
-            
-            
                 
             image=batch["img"]
             image=image.type(torch.cuda.FloatTensor)
@@ -96,19 +97,17 @@ def train(model_image, autoencoder, train_dataloader, val_dataloader, device, co
             AZIMUTH_INPUT = batch["azimuth"]
             AZIMUTH_INPUT=AZIMUTH_INPUT.type(torch.cuda.FloatTensor)
             optimizer.zero_grad()
+
             if config["final_layer"]=="variational":
                 mu, log_var = model_image(image)
                 std = torch.sqrt(torch.exp(log_var))
                 rand = torch.randn(std.size(),  device=device)
                 predicted_latent_from_2d = (mu + rand * std).cuda()
-
-            
             else:
                 predicted_latent_from_2d=model_image(image)
            
             if config["loss_criterion"] == "variational":
                 loss = loss_latent_matching(predicted_latent_from_2d, latent_from_pointcloud) + LAMBDA * loss_div(ALPHA, PENALTY_ANGLE, AZIMUTH_INPUT, std)
-               
             else:
                 loss = loss_criterion(predicted_latent_from_2d, latent_from_pointcloud)
             
@@ -159,11 +158,9 @@ def train(model_image, autoencoder, train_dataloader, val_dataloader, device, co
                         
                         std = torch.sqrt(torch.exp(log_var))
                         rand = torch.randn(std.size(),  device=device)
-                        predicted_latent_from_2d = (mu + rand * std).cuda()
-                        
+                        predicted_latent_from_2d = (mu + rand * std).cuda()   
                     else:
                         predicted_latent_from_2d=model_image(image)
-                   
                     
                     if config["loss_criterion"] == "variational":
                         loss = loss_latent_matching(predicted_latent_from_2d, latent_from_pointcloud) + LAMBDA * loss_div(ALPHA, PENALTY_ANGLE, AZIMUTH_INPUT, std)
@@ -181,16 +178,16 @@ def train(model_image, autoencoder, train_dataloader, val_dataloader, device, co
                     model_image.state_dict(),
                     os.path.join(config["experiment_name"],"model_best_epoch_{}.pth".format(epoch)),
                 )
-                
                 best_distance = distance
 
             model_image.train()
 
         if epoch%config["save_every_n"]==0:
-          torch.save(
+            torch.save(
                 model_image.state_dict(),
                 os.path.join(config["experiment_name"],"model_epoch_{}.pth".format(epoch)),
             )
+    
     print("Total training loss:",train_loss_total/(config["max_epochs"]*len(train_dataloader)))
     print("Total validation loss:",val_loss_total/(count_val*len(val_dataloader)))
 
@@ -224,7 +221,7 @@ def main(config):
     )
     model_image = ImageEncoder(config["final_layer"], config["bottleneck"])
 
-    autoencoder=AutoEncoder(config["autoencoder_bottleneck"],config["autoencoder_hidden_size"],config["autoencoder_output_size"])
+    autoencoder=AutoEncoder(config["autoencoder_bottleneck"], config["autoencoder_hidden_size"], config["autoencoder_output_size"])
     
     autoencoder.load_state_dict(torch.load(config["3d_autoencoder_path"], map_location="cpu"))
     

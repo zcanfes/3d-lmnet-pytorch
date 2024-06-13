@@ -34,20 +34,22 @@ def main(config):
     autoencoder = AutoEncoder(config["bottleneck"],config["hidden_size"],config["output_size"])
     autoencoder.to(device)
 
+    print(config["lr"])
+
     # optimizer
     optimizer = optim.Adam(
         autoencoder.parameters(),
-        lr=config["lr"],
+        lr=float(config["lr"]),
         betas=[0.9, 0.999],
-        weight_decay=config["weight_decay"],
+        weight_decay=float(config["weight_decay"]),
     )
 
-    batches = int(len(train_dataset) / config["batch_size"])
+    batches = int(len(train_dataset) / float(config["batch_size"]))
 
     min_chamfer_loss = 1e3
     best_epoch = -1
     
-    print("\033[31mBegin Training...\033[0m")
+    print("\033[31mTraining started...\033[0m")
     for epoch in range(1, config["max_epochs"] + 1):
         # training
         start = time.time()
