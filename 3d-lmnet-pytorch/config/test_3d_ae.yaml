@@ -1,0 +1,9 @@
+autoencoder: "./3d_autoencoder/model_autoencoder_final.pth"
+infer_gt: "./autoencoder_results/gt/"
+infer_pred: "./autoencoder_results/pred/"
+bottleneck: 512
+batch_size: 1
+num_workers: 4
+input_size: 256
+hidden_size: 256
+output_size: 6144

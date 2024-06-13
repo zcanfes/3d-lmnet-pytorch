@@ -1,0 +1,17 @@
+encoder_path: './2d_encoder/DIV/model_final.pth'
+device: 'cuda:0'
+is_overfit: False
+bottleneck: 512
+2d_inference_pred: './image_encoder_DIV_results/pred/'
+2d_inference_gt_point: './image_encoder_DIV_results/gt/pointcloud/'
+2d_inference_gt_img: './image_encoder_DIV_results/gt/image/'
+cat: 1
+batch_size: 1
+loss_criterion: 'variational'
+final_layer: 'variational'
+3d_autoencoder_path: './3d_autoencoder/model_autoencoder_final.pth'
+resume_ckpt: Null
+learning_rate_model: 5e-5
+autoencoder_bottleneck: 512
+autoencoder_hidden_size: 256
+autoencoder_output_size: 6144

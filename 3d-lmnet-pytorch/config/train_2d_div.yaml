@@ -1,0 +1,19 @@
+experiment_name: "./2d_encoder/DIV"
+device: "cuda:0"  # run this on a gpu for a reasonable training time
+bottleneck: 512
+cat: 13
+batch_size: 64
+loss_criterion: "variational"
+final_layer: "variational"
+3d_autoencoder_path: "./3d_autoencoder/model_autoencoder_final.pth"
+resume_ckpt: null
+lr: 5e-5
+max_epochs: 20
+save_every_n: 1
+validate_every_n: 3
+autoencoder_bottleneck: 512
+autoencoder_hidden_size: 256
+autoencoder_output_size: 6144 # 2048*3
+alpha: 0.2
+penalty_angle: 20
+lambda: 5.5

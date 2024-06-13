@@ -1,0 +1,16 @@
+encoder_path: './2d_encoder/L1/model_final.pth'
+device: 'cuda:0'
+bottleneck: 512
+2d_inference_pred: './image_encoder_L1_results/pred/'
+2d_inference_gt_point: './image_encoder_L1_results/gt/pointcloud/'
+2d_inference_gt_img: './image_encoder_L1_results/gt/image/'
+cat: 13
+batch_size: 1
+loss_criterion: 'L1'
+final_layer: 'normal'
+3d_autoencoder_path: './3d_autoencoder/model_autoencoder_final.pth'
+resume_ckpt: null
+learning_rate_model: 5e-5
+autoencoder_bottleneck: 512
+autoencoder_hidden_size: 256
+autoencoder_output_size: 6144

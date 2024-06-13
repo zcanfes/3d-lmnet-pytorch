@@ -1,0 +1,13 @@
+log_dir: "./3d_autoencoder"
+device: "cuda:0"
+lr: 1e-4
+weight_decay: 1e-6
+batch_size: 32
+resume_ckpt: null
+max_epochs: 500
+num_workers: 4
+bottleneck: 512
+hidden_size: 256
+output_size: 6144
+print_every_n: 5
+visualize_every_n: 5

@@ -1,0 +1,3 @@
+input_img_path: './image_encoder_L2_results/gt/image/image_10'
+gt_point_cloud_path: './image_encoder_L2_results/gt/pointcloud/pointcloud_10'
+predicted_point_cloud_path: './image_encoder_L2_results/pred/inference_10'
