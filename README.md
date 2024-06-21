@@ -38,7 +38,7 @@ The **data** directory's file structure should look like this after executing da
 * PyTorch 1.12.0
 * PyTorch3D 0.7.2
 
-## 2.2. Install Dependencies
+### 2.2. Install Dependencies
 
 First, clone the repository and create a Conda environment:
 
