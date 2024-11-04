@@ -134,12 +134,10 @@ After obtaining the `.npy` point cloud and image files in the Inference, you can
 
 You can download our pre-trained models using the links below:
 
-* [3D point cloud autoencoder model](https://drive.google.com/file/d/1unq5OYW8WBhb-7ccFWGU2m1B0SaBlCjm/view?usp=sharing)
-* [2D image encoder - Variant I with L1 Loss](https://drive.google.com/file/d/1YnNNJ15hwcGqDQHb-7t4HMC-TC1S-1fT/view?usp=share_link)
-* [2D image encoder - Variant I with L2 Loss](https://drive.google.com/file/d/1uS13xA3k28jT5kxFHLVUveqm2_kD-5I8/view?usp=share_link)
-* [2D image encoder - Variant II with diversity loss weight=5.5](https://drive.google.com/file/d/1b90RlaXwkl37V0Ue8MpT7vJTMfCM5-Uz/view?usp=share_link)
-* [2D image encoder - Variant II with diversity loss weight=0.5](https://drive.google.com/file/d/1-u4awBG05Kzk2cnkT4v0G-oqj2_7e874/view?usp=share_link)
-* [2D image encoder - Variant II with diversity loss weight=0.0](https://drive.google.com/file/d/1TZ40LANluZqIZ4utURnzJ-w8UqydirhE/view?usp=share_link)
+* [3D point cloud autoencoder model](https://drive.google.com/file/d/1Mz_I-nbdbusK_vdN9uLw8_csaDVe-czH/view?usp=sharing)
+* [2D image encoder - Variant I with L1 Loss](https://drive.google.com/file/d/1D26-dkhH4RwGMMJ8AfG5jbVMv0lFYFLo/view?usp=sharing)
+* [2D image encoder - Variant I with L2 Loss](https://drive.google.com/file/d/1g6rwV_iopa_43j5QOoukGUoK2T6Khzn7/view?usp=sharing)
+* [2D image encoder - Variant II with diversity loss weight=5.5](https://drive.google.com/file/d/1yiIU6BE3sJbLdCnQ2qRjcl2cpqFVAZJm/view?usp=sharing)
 
 After downloading the pre-trained models and the datasets, you can run the code using the `3D-LMNET.ipynb` file. You should run the cells under the `Imports and Setup` as well as the `Inference`. 
 
